@@ -1,1 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AI Travel Planner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <form action="confirmation.html" class = "input-box" method="get">
+        <div class = "input-text">
+            <a>Dates*: </a>
+            <input type="date" value="2024-09-22" />
+            <a>to</a>
+            <input type="date" value="2024-09-23" />
+        </div>
+
+        <div class = "input-text">
+            <label for="departure-city-input">Departure City:</label>
+            <div class="dropdown">
+                <input type="text" id="departure-city-input" placeholder="Type to search..." autocomplete="off">
+                <div id="departure-dropdown-list" class="dropdown-list hidden"></div>
+            </div>
+        </div>
+
+        <div class = "input-text">
+            <label for="arrival-city-input">Arrival City:</label>
+            <div class="dropdown">
+                <input type="text" id="arrival-city-input" placeholder="Type to search..." autocomplete="off">
+                <div id="arrival-dropdown-list" class="dropdown-list hidden"></div>
+            </div>
+        </div>
+
+
+        <script src="trip-input.js"></script>
+
+        <div class = "input-text">
+            <label for="features">Hotel:</label>
+            <select name="features">
+                <option value="Any">Any</option>
+                <option value="2">2 stars or above</option>
+                <option value="3">3 stars or above</option>
+                <option value="4">4 stars or above</option>
+                <option value="5">5 stars</option>
+            </select>
+        </div>
+        <div class = "input-text">
+            <button type="next-button">Next</button>
+        </div>
+    </form>
+
+</body>
+</html>
 

@@ -1,1 +1,50 @@
+.input-box {
+    margin: 20px;
+}
 
+.input-text {
+    margin: 20px;
+}
+
+/* Style the input element */
+.dropdown {
+    position: relative;
+    width: 200px;
+}
+
+input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Style the dropdown list */
+.dropdown-list {
+    position: absolute;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    z-index: 1000;
+    max-height: 150px;
+    overflow-y: auto;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Style the items in the dropdown list */
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+}
+
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+
+/* Hide the dropdown list by default */
+.hidden {
+    display: none;
+}

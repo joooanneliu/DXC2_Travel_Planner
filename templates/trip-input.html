@@ -1,0 +1,30 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Input</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <div class="container">
+        <h1 class="trip-input-title">Trip Input</h1>
+        <form method="POST" action="{{ url_for('trip_input') }}" class="trip-input-form">
+            <div class="placeholder">
+                <label for="placeholder1">Placeholder 1:</label>
+                <input type="text" id="placeholder1" name="placeholder1" required>
+            </div>
+            <div class="placeholder">
+                <label for="placeholder2">Placeholder 2:</label>
+                <input type="text" id="placeholder2" name="placeholder2" required>
+            </div>
+            <div class="submit-btn-container">
+                <button type="submit">Submit</button>
+            </div>
+        </form>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</body>
+</html>

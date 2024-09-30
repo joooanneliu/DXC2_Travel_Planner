@@ -1,30 +1,103 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trip Input</title>
+    <title>AI Travel Planner</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Assistant" >
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body>
+<body class="main">
     {% include 'navbar.html' %}
-    <div class="container">
-        <h1 class="trip-input-title">Trip Input</h1>
-        <form method="POST" action="{{ url_for('trip_input') }}" class="trip-input-form">
-            <div class="placeholder">
-                <label for="placeholder1">Placeholder 1:</label>
-                <input type="text" id="placeholder1" name="placeholder1" required>
+    <div class="background-box">
+        <form action="{{ url_for('trip_input') }}" class="input-box" method="get">
+            <div class="input-text">
+                <a>Dates*: </a>
+                <input type="date" value="2024-09-22" />
+                <a>to</a>
+                <input type="date" value="2024-09-23" />
             </div>
-            <div class="placeholder">
-                <label for="placeholder2">Placeholder 2:</label>
-                <input type="text" id="placeholder2" name="placeholder2" required>
+
+            <div class="input-text">
+                <label for="departure-city-input">Departure City:</label>
+                <div class="dropdown">
+                    <input type="text" id="departure-city-input" placeholder="Type to search..." autocomplete="off">
+                    <div id="departure-dropdown-list" class="dropdown-list hidden"></div>
+                </div>
             </div>
-            <div class="submit-btn-container">
-                <button type="submit">Submit</button>
+
+            <div class="input-text">
+                <label for="arrival-city-input">Arrival City:</label>
+                <div class="dropdown">
+                    <input type="text" id="arrival-city-input" placeholder="Type to search..." autocomplete="off">
+                    <div id="arrival-dropdown-list" class="dropdown-list hidden"></div>
+                </div>
+            </div>
+
+            <div class="input-text">
+                <label for="features">Hotel:</label>
+                <select name="features">
+                    <option value="Any">Any</option>
+                    <option value="2">2 stars or above</option>
+                    <option value="3">3 stars or above</option>
+                    <option value="4">4 stars or above</option>
+                    <option value="5">5 stars</option>
+                </select>
+            </div>
+
+            <div class="input-text">
+                <button type="submit">Next</button>
             </div>
         </form>
     </div>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const cities = ["New York", "Austin", "San Francisco", "Dallas", "Chicago", "Houston"];
+            
+            const setupDropdown = (inputId, dropdownListId) => {
+                const input = document.getElementById(inputId);
+                const dropdownList = document.getElementById(dropdownListId);
+
+                input.addEventListener("input", () => {
+                    const value = input.value.toLowerCase();
+                    dropdownList.innerHTML = "";
+                    if (value) {
+                        const filteredCities = cities.filter(city => city.toLowerCase().includes(value));
+                        filteredCities.forEach(city => {
+                            const item = document.createElement("div");
+                            item.textContent = city;
+                            item.classList.add("dropdown-item");
+                            item.addEventListener("click", () => {
+                                input.value = city;
+                                dropdownList.innerHTML = "";
+                                dropdownList.classList.add("hidden");
+                            });
+                            dropdownList.appendChild(item);
+                        });
+                        dropdownList.classList.toggle("hidden", filteredCities.length === 0);
+                    } else {
+                        dropdownList.classList.add("hidden");
+                    }
+                });
+            };
+
+            setupDropdown("departure-city-input", "departure-dropdown-list");
+            setupDropdown("arrival-city-input", "arrival-dropdown-list");
+
+            document.addEventListener("click", (event) => {
+                const departureInput = document.getElementById("departure-city-input");
+                const arrivalInput = document.getElementById("arrival-city-input");
+                const departureDropdown = document.getElementById("departure-dropdown-list");
+                const arrivalDropdown = document.getElementById("arrival-dropdown-list");
+                
+                if (!departureInput.contains(event.target) && !departureDropdown.contains(event.target) &&
+                    !arrivalInput.contains(event.target) && !arrivalDropdown.contains(event.target)) {
+                    departureDropdown.classList.add("hidden");
+                    arrivalDropdown.classList.add("hidden");
+                }
+            });
+        });
+    </script>
 </body>
 </html>

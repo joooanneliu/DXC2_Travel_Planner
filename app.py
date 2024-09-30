@@ -40,7 +40,7 @@ def sign_in():
         if user and check_password_hash(user.password, form.password.data):
             login_user(user)
             flash('Logged in successfully!', 'success')
-            return redirect(url_for('flight_car'))  # Redirect to next page
+            return redirect(url_for('trip_input'))  # Redirect to next page
         else:
             flash('Login failed. Check email and password.', 'danger')
     return render_template('sign-in.html', form=form)
@@ -56,6 +56,12 @@ def register():
         flash('Account created successfully!', 'success')
         return redirect(url_for('sign_in'))
     return render_template('register.html', form=form)
+
+@app.route('/trip_input')
+@login_required
+def trip_input():
+    return render_template('trip-input.html')
+
 
 @app.route('/flightandcar')
 @login_required

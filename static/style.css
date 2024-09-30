@@ -1,101 +1,46 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: white;
-    color: #333;
+    background-image: url('../static/new york.webp');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+    height: 100vh;
     margin: 0;
-    padding: 0;
+    font-family: Assistant;
 }
 
-h1 {
-    color: white;
-}
+
 .navbar {
-    background-color: #0044cc; /* Dark blue */
-    padding: 15px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-}
-
-.navbar .logo a {
-    color: white;
-    font-size: 24px;
-    text-decoration: none;
-}
-
-.nav-links a {
-    color: white;
-    margin-left: 20px;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.nav-links a:hover {
-    color: #ffcc00; 
-}
-
-/* Container Styles */
-.container {
-    width: 80%;
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 20px;
     background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 5px 20px;
 }
 
-/* Auth Title Styles */
-.auth-title, .trip-input-title {
-    color: #0044cc;
-    text-align: center;
-    margin-bottom: 20px;
+.navbar a {
+    color: black;
+    text-decoration: none;
+    margin-left: 20px;
 }
 
-/* Form Styles */
-.auth-form, .trip-input-form {
-    display: flex;
-    flex-direction: column;
-}
-
-.placeholder {
-    margin-bottom: 15px;
-}
-
-.placeholder label {
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.placeholder input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-/* Submit Button Styles */
-.submit-btn-container {
-    display: flex;
-    justify-content: center;
+.container {
+    background-color: rgba(255, 255, 255, 0.75); 
+    width: 75%;
+    padding: 20px;
+    height: 100vh;
+    right: 0;
+    top: 0;
 }
 
 button {
-    background-color: #0044cc; /* Dark blue */
-    color: white;
+    background-color: #8e83d5;
+    color: black; 
     border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
+    border-radius: 15px; 
+    padding: 5px 15px;
+    font-size: 13px;
 }
 
 button:hover {
-    background-color: #003399; 
-}
-
-/* Error Message */
-.error {
-    color: red;
-    font-size: 14px;
+    background-color: #483d8b; /* Darker shade on hover */
 }

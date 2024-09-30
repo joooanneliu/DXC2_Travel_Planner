@@ -4,12 +4,13 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Sign-In</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Assistant" >
         <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     </head>
     <body>
         {% include 'navbar.html' %}
         <div class="container">
-            <h1 class="auth-title">Login</h1>
+            <h1 class="auth-title">Create your dream trip itinerary with just one click!</h1>
             <form method="POST" action="{{ url_for("sign_in") }}" class="auth-form">
                 {{ form.hidden_tag() }}
                 <p>

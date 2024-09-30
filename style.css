@@ -6,7 +6,7 @@
     margin: 20px;
 }
 
-/* Style the input element */
+
 .dropdown {
     position: relative;
     width: 200px;
@@ -17,11 +17,24 @@ input {
     font-size: 16px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    width: 100%;
     box-sizing: border-box;
 }
 
-/* Style the dropdown list */
+select {
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+button {
+    padding: 5px 10px;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 4px;
+}
+
 .dropdown-list {
     position: absolute;
     border: 1px solid #ccc;
@@ -50,20 +63,20 @@ input {
 }
 
 .background-box {
-    width: 80%;
-    justify-content: center;
-    /* text-align: center;  */
-
-    background-color: rgba(255, 255, 255, 0.8); /* White with 80% opacity */
+    position: absolute;
+    top: 50%;                
+    left: 50%;              
+    transform: translate(-50%, -50%);
+    width: 60%;
+    background-color: rgba(255, 255, 255, 0.8);
     padding: 20px;
     margin: 20px;
+    border-radius: 10px;
 }
 .main {
     background-image: url('new\ york.webp');
-    background-repeat: no-repeat; /* Prevents repeating the image */
-    background-position: center; /* Centers the image in the viewport */
-    background-size: auto; /* Keeps the original size of the image */
-    height: 100vh; /* Full viewport height */
-    width: 100vw; /* Full viewport width */
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: fixed;
     overflow: hidden;
 }

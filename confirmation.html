@@ -1,1 +1,59 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation Page</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="confirmation-container">
+        <h1>Travel Details Confirmation</h1>
+        <div id="confirmation-details">
+            <p><strong>Travel Dates:</strong> <span id="travel-dates"></span></p>
+            <p><strong>Departure City:</strong> <span id="departure-city"></span></p>
+            <p><strong>Arrival City:</strong> <span id="arrival-city"></span></p>
+            <p><strong>Need to Book Flight:</strong> <span id="flight-needed"></span></p>
+            <p><strong>Minimum Hotel Stars Needed:</strong> <span id="hotel-stars"></span></p>
+            <p><strong>Need to Rent Car:</strong> <span id="car-needed"></span></p>
+        </div>
+        <button id="edit-button">Edit Details</button>
+    </div>
+
+    <script>
+        // Function to get URL parameters
+        function getQueryParams() {
+            const params = {};
+            const queryString = window.location.search.substring(1);
+            const regex = /([^&=]+)=([^&]*)/g;
+            let m;
+
+            while (m = regex.exec(queryString)) {
+                params[decodeURIComponent(m[1])] = decodeURIComponent(m[2]);
+            }
+            return params;
+        }
+
+        // Display the travel details
+        function displayTravelDetails() {
+            const params = getQueryParams();
+            document.getElementById('travel-dates').textContent = `From ${params.startDate} to ${params.endDate}`;
+            document.getElementById('departure-city').textContent = params.departureCity || 'Not provided';
+            document.getElementById('arrival-city').textContent = params.arrivalCity || 'Not provided';
+            document.getElementById('flight-needed').textContent =  params.flightNeeded || 'Not Needed';
+            document.getElementById('hotel-stars').textContent = params.hotelStars || 'Not specified';
+            document.getElementById('car-needed').textContent = params.carNeeded || 'Not Needed';
+            
+        }
+
+        // Event listener for the edit button
+        document.getElementById('edit-button').addEventListener('click', function() {
+            window.history.back(); // Go back to the previous form
+        });
+
+        // Display details on page load
+        displayTravelDetails();
+    </script>
+</body>
+</html>

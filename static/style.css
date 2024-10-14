@@ -8,7 +8,6 @@ body {
     font-family: Assistant;
 }
 
-
 .navbar {
     display: flex;
     justify-content: space-between;
@@ -33,7 +32,7 @@ body {
 }
 
 button {
-    background-color: #8e83d5;
+    background-color: #929cde;
     color: black; 
     border: none;
     border-radius: 15px; 
@@ -43,4 +42,121 @@ button {
 
 button:hover {
     background-color: #483d8b; /* Darker shade on hover */
+}
+
+.input-box {
+    margin: 20px;
+}
+  
+.input-text {
+    display: flex;
+    margin-bottom: 15px;
+    align-items: center;
+}
+  
+.dropdown {
+    position: relative;
+    width: 200px;
+}
+  
+input {
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+  
+select {
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+  
+.dropdown-list {
+    position: absolute;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: white;
+    z-index: 1000;
+    max-height: 150px;
+    overflow-y: auto;
+    width: 100%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+  
+  /* Style the items in the dropdown list */
+.dropdown-item {
+    padding: 10px;
+    cursor: pointer;
+}
+  
+.dropdown-item:hover {
+    background-color: #f0f0f0;
+}
+  
+  /* Hide the dropdown list by default */
+.hidden {
+    display: none;
+}
+
+/*Trip input page stuff */
+#add-person {
+    margin-left: 10px;
+}
+
+#start-date {
+    margin-right: 10px;
+}
+
+.input-text input, 
+.input-text select:not([name="people[]"]) {
+    margin-left: 10px;
+}
+
+/* Keyword input */
+#keyword-input {
+    height: 100px;
+    padding: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+.keywords-list {
+    margin-top: 15px;
+}
+
+#keywords-display {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#keywords-display .keyword {
+    display: flex;
+    background-color: #411bda;
+    color: white;
+    padding: 5px 10px;
+    margin: 5px;
+    border-radius: 20px;
+    font-size: 14px;
+}
+
+
+.delete-btn {
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-block;
+    margin-left: 10px;
+    padding: 0;
+    text-align: center;
+    line-height: 20px;
+    margin-bottom: 10px;
 }

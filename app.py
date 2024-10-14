@@ -6,10 +6,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from forms import LoginForm, SignupForm
 from models import db, User
 from flask_migrate import Migrate
+from datetime import timedelta
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/users.db'  # Adjust to use the instance folder's db
 app.config['SECRET_KEY'] = os.urandom(24)  # Needed for sessions
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 db.init_app(app)
 
 login_manager = LoginManager()
@@ -40,7 +42,7 @@ def sign_in():
         if user and check_password_hash(user.password, form.password.data):
             login_user(user)
             flash('Logged in successfully!', 'success')
-            return redirect(url_for('trip_input'))  # Redirect to next page
+            return redirect(url_for('trip_input'))  
         else:
             flash('Login failed. Check email and password.', 'danger')
     return render_template('sign-in.html', form=form)
@@ -57,10 +59,54 @@ def register():
         return redirect(url_for('sign_in'))
     return render_template('register.html', form=form)
 
-@app.route('/trip_input')
+@app.route('/trip_input', methods=["POST", "GET"])
 @login_required
 def trip_input():
+    if request.method == "POST":
+        # Get the form data from request.form
+        start_date = request.form.get('start-date')
+        end_date = request.form.get('end-date')
+        departure_city = request.form.get('departure-city')
+        arrival_city = request.form.get('arrival-city')
+        hotel_stars = request.form.get('hotel-stars')
+        budget = request.form.get('budget')
+
+        transport_mode = request.form.get('transport-mode')
+        if transport_mode == "Flight":
+            flight_needed = "Yes"
+        else:
+            flight_needed = "No"
+        
+        if  transport_mode == "Car":
+            car_needed = "Yes"
+        else:
+            car_needed = "No"
+
+        # Pass data directly to confirmation.html
+        return redirect(url_for('confirmation', start_date=start_date, end_date=end_date,
+                                departure_city=departure_city, arrival_city=arrival_city,
+                                flight_needed=flight_needed, car_needed=car_needed,
+                                hotel_stars=hotel_stars, budget=budget))
+    
+    # GET request to render the trip input form
     return render_template('trip-input.html')
+
+
+@app.route('/confirmation')
+@login_required
+def confirmation():
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    departure_city = request.args.get('departure_city')
+    arrival_city = request.args.get('arrival_city')
+    flight_needed = request.args.get('flight_needed')
+    hotel_stars = request.args.get('hotel_stars')
+    car_needed = request.args.get('car_needed')
+
+    return render_template('confirmation.html', start_date=start_date, end_date=end_date,
+                           departure_city=departure_city, arrival_city=arrival_city,
+                           flight_needed=flight_needed, hotel_stars=hotel_stars,
+                           car_needed=car_needed)
 
 
 @app.route('/flightandcar')
@@ -77,11 +123,6 @@ def hotel():
 @login_required
 def itinerary():
     return "Welcome to the itinerary"
-
-@app.route('/confirmation')
-@login_required
-def confirmation():
-    return "Welcome to the confirmation page"
 
 @app.route('/logout')
 @login_required

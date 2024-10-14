@@ -4,39 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Travel Planner</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Assistant" >
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Assistant">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="main">
+<body>
     {% include 'navbar.html' %}
-    <div class="background-box">
-        <form action="{{ url_for('trip_input') }}" class="input-box" method="get">
+    <div class="container">
+        <form action="{{ url_for('trip_input') }}" method="POST" class="input-box" id="travelForm">
+
+            <!-- Date selection -->
             <div class="input-text">
                 <a>Dates*: </a>
-                <input type="date" value="2024-09-22">
+                <input type="date" id="start-date" name="start-date" required>
                 <a>to</a>
-                <input type="date" value="2024-09-23">
+                <input type="date" id="end-date" name="end-date" required>
             </div>
 
+            <!-- Departure City -->
             <div class="input-text">
                 <label for="departure-city-input">Departure City:</label>
                 <div class="dropdown">
-                    <input type="text" id="departure-city-input" placeholder="Type to search..." autocomplete="off">
+                    <input type="text" id="departure-city-input" name="departure-city" placeholder="Type to search..." autocomplete="off" required>
                     <div id="departure-dropdown-list" class="dropdown-list hidden"></div>
                 </div>
             </div>
 
+            <!-- Arrival City -->
             <div class="input-text">
                 <label for="arrival-city-input">Arrival City:</label>
                 <div class="dropdown">
-                    <input type="text" id="arrival-city-input" placeholder="Type to search..." autocomplete="off">
+                    <input type="text" id="arrival-city-input" name="arrival-city" placeholder="Type to search..." autocomplete="off" required>
                     <div id="arrival-dropdown-list" class="dropdown-list hidden"></div>
                 </div>
             </div>
 
+            <!-- Hotel Stars -->
             <div class="input-text">
                 <label for="features">Hotel: </label>
-                <select name="features">
+                <select name="hotel-stars" id="hotel" required>
                     <option value="Any">Any</option>
                     <option value="2">2 stars or above</option>
                     <option value="3">3 stars or above</option>
@@ -45,16 +50,83 @@
                 </select>
             </div>
 
+            <!-- People Traveling -->
+            <label>People Traveling:</label>
+            <div class="input-text" id="people-traveling">
+                <select name="people[]">
+                    <option value="0-5 years">0 - 5 years</option>
+                    <option value="6-12 years">6 - 12 years</option>
+                    <option value="13-17 years">13 - 17 years</option>
+                    <option value="18-20 years">18 - 20 years</option>
+                    <option value="21-35 years">21 - 35 years</option>
+                    <option value="36-59 years">36 - 59 years</option>
+                    <option value="60+ years">60+ years</option>
+                </select>
+                <button type="button" id="add-person" onclick="addPerson()">Add person</button>
+            </div>
+
+            <!-- Budget selection -->
+            <div class="input-text">
+                <label for="budget">Budget:</label>
+                <select id="budget" name="budget">
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+
+            <div class="input-text">
+                <label>Mode of Transport:</label>
+                <div>
+                    <input type="radio" id="flight" name="transport-mode" value="Flight" required>
+                    <label for="flight">Flight</label>
+
+                    <input type="radio" id="car" name="transport-mode" value="Car">
+                    <label for="car">Car</label>
+                </div>
+            </div>
+
+            <div class="input-text">
+                <textarea id="keyword-input" rows="2" cols="40" placeholder="Type keywords and press Enter"></textarea>
+            </div>
+
+            <div class="keywords-list">
+                <p>Keywords:</p>
+                <div id="keywords-display"></div>
+            </div>
+
+            <!-- Submit Button -->
             <div class="input-text">
                 <button type="submit">Next</button>
             </div>
+
         </form>
     </div>
 
+    <!-- People traveling + Dropdown search -->
     <script>
+        function addPerson() {
+            const peopleContainer = document.getElementById('people-traveling');
+            const select = document.createElement('select');
+            select.name = 'people[]';
+
+            select.innerHTML = `
+                <option value="0-5 years">0 - 5 years</option>
+                <option value="6-12 years">6 - 12 years</option>
+                <option value="13-17 years">13 - 17 years</option>
+                <option value="18-20 years">18 - 20 years</option>
+                <option value="21-35 years">21 - 35 years</option>
+                <option value="36-59 years">36 - 59 years</option>
+                <option value="60+ years">60+ years</option>
+            `;
+            peopleContainer.insertBefore(select, peopleContainer.lastElementChild);
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
-            const cities = ["New York", "Austin", "San Francisco", "Dallas", "Chicago", "Houston"];
-            
+            const cities = [
+                "New York", "Austin", "San Francisco", "Dallas", "Chicago", "Houston"
+            ];
+
             const setupDropdown = (inputId, dropdownListId) => {
                 const input = document.getElementById(inputId);
                 const dropdownList = document.getElementById(dropdownListId);
@@ -90,7 +162,7 @@
                 const arrivalInput = document.getElementById("arrival-city-input");
                 const departureDropdown = document.getElementById("departure-dropdown-list");
                 const arrivalDropdown = document.getElementById("arrival-dropdown-list");
-                
+
                 if (!departureInput.contains(event.target) && !departureDropdown.contains(event.target) &&
                     !arrivalInput.contains(event.target) && !arrivalDropdown.contains(event.target)) {
                     departureDropdown.classList.add("hidden");
@@ -98,6 +170,53 @@
                 }
             });
         });
+
+        document.addEventListener("DOMContentLoaded", () => {
+        const keywordInput = document.getElementById('keyword-input');
+        const keywordsDisplay = document.getElementById('keywords-display');
+        let keywords = [];
+
+        // user hits Enter key to store it
+        keywordInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission or new line
+                const keyword = keywordInput.value.trim();
+
+                if (keyword) {
+                    keywords.push(keyword); // Add keyword to the list
+                    keywordInput.value = ''; // Clear the input field
+                    displayKeywords();
+                }
+            }
+        });
+
+        // Function to display keywords underneath the input box
+        function displayKeywords() {
+            keywordsDisplay.innerHTML = ''; // Clear the display area first
+            keywords.forEach((kw, index) => {
+                const keywordElement = document.createElement('div');
+                keywordElement.classList.add('keyword-item');
+                
+                const keywordSpan = document.createElement('span');
+                keywordSpan.textContent = kw;
+                keywordSpan.classList.add('keyword');
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'X';
+                deleteBtn.classList.add('delete-btn');
+                
+                // Add click event listener for removing the keyword
+                deleteBtn.addEventListener('click', () => {
+                    keywords.splice(index, 1); // Remove the keyword from the array
+                    displayKeywords(); // Refresh the display
+                });
+
+                keywordElement.appendChild(keywordSpan);
+                keywordElement.appendChild(deleteBtn);
+                keywordsDisplay.appendChild(keywordElement);
+            });
+        }
+    });
     </script>
 </body>
 </html>

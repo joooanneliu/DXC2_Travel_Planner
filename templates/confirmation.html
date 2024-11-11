@@ -17,9 +17,15 @@
             <p><strong>Need to Book Flight:</strong> {{ flight_needed or 'Not Needed' }}</p>
             <p><strong>Minimum Hotel Stars Needed:</strong> {{ hotel_stars or 'Not specified' }}</p>
             <p><strong>Need to Rent Car:</strong> {{ car_needed or 'Not Needed' }}</p>
+            <p><strong>Keywords:</strong> {{ keywords or 'None' }}</p>
         </div>
 
         <button type="submit" id="edit-button">Edit Details</button>
+
+        <form action="{{ url_for('flight_car') }}" method="get" style="display:inline;">
+            <button type="submit" id="confirm">Next</button>
+        </form>
+
     </div>
 
     <script>

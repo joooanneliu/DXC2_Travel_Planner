@@ -1,6 +1,6 @@
 body {
     background-image: url('../static/new york.webp');
-    background-repeat: no-repeat;
+    background-repeat: repeat-y;
     background-position: center;
     background-size: cover;
     height: 100vh;
@@ -124,39 +124,6 @@ select {
     box-sizing: border-box;
 }
 
-.keywords-list {
-    margin-top: 15px;
-}
-
-#keywords-display {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-#keywords-display .keyword {
-    display: flex;
-    background-color: #411bda;
-    color: white;
-    padding: 5px 10px;
-    margin: 5px;
-    border-radius: 20px;
-    font-size: 14px;
-}
-
-
-.delete-btn {
-    background-color: red;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 14px;
-    cursor: pointer;
-    display: inline-block;
-    margin-left: 10px;
-    padding: 0;
-    text-align: center;
-    line-height: 20px;
-    margin-bottom: 10px;
+#confirm {
+    margin-left: 200px;
 }

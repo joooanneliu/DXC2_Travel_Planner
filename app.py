@@ -63,7 +63,6 @@ def register():
 @login_required
 def trip_input():
     if request.method == "POST":
-        # Get the form data from request.form
         start_date = request.form.get('start-date')
         end_date = request.form.get('end-date')
         departure_city = request.form.get('departure-city')
@@ -72,23 +71,15 @@ def trip_input():
         budget = request.form.get('budget')
 
         transport_mode = request.form.get('transport-mode')
-        if transport_mode == "Flight":
-            flight_needed = "Yes"
-        else:
-            flight_needed = "No"
-        
-        if  transport_mode == "Car":
-            car_needed = "Yes"
-        else:
-            car_needed = "No"
+        flight_needed = "Yes" if transport_mode == "Flight" else "No"
+        car_needed = "Yes" if transport_mode == "Car" else "No"
+        keywords = request.form.get('keywords', '')
 
-        # Pass data directly to confirmation.html
         return redirect(url_for('confirmation', start_date=start_date, end_date=end_date,
                                 departure_city=departure_city, arrival_city=arrival_city,
                                 flight_needed=flight_needed, car_needed=car_needed,
-                                hotel_stars=hotel_stars, budget=budget))
-    
-    # GET request to render the trip input form
+                                hotel_stars=hotel_stars, budget=budget, keywords=keywords))
+
     return render_template('trip-input.html')
 
 
@@ -100,19 +91,21 @@ def confirmation():
     departure_city = request.args.get('departure_city')
     arrival_city = request.args.get('arrival_city')
     flight_needed = request.args.get('flight_needed')
-    hotel_stars = request.args.get('hotel_stars')
     car_needed = request.args.get('car_needed')
+    hotel_stars = request.args.get('hotel_stars')
+    budget = request.args.get('budget')
+    keywords = request.args.get('keywords')
 
     return render_template('confirmation.html', start_date=start_date, end_date=end_date,
                            departure_city=departure_city, arrival_city=arrival_city,
-                           flight_needed=flight_needed, hotel_stars=hotel_stars,
-                           car_needed=car_needed)
+                           flight_needed=flight_needed, car_needed=car_needed,
+                           hotel_stars=hotel_stars, budget=budget, keywords=keywords)
 
 
 @app.route('/flightandcar')
 @login_required
 def flight_car():
-    return "Welcome to the flight and cars page"
+    return render_template('flight-car.html')
 
 @app.route('/hotel')
 @login_required

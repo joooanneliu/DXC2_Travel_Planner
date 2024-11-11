@@ -20,27 +20,37 @@
                 <input type="date" id="end-date" name="end-date" required>
             </div>
 
-            <!-- Departure City -->
+            <!-- Departure City (Dropdown) -->
             <div class="input-text">
-                <label for="departure-city-input">Departure City:</label>
-                <div class="dropdown">
-                    <input type="text" id="departure-city-input" name="departure-city" placeholder="Type to search..." autocomplete="off" required>
-                    <div id="departure-dropdown-list" class="dropdown-list hidden"></div>
-                </div>
+                <label for="departure-city">Departure City:</label>
+                <select name="departure-city" id="departure-city" required>
+                    <option value="default">Select</option>
+                    <option value="New York">New York</option>
+                    <option value="Austin">Austin</option>
+                    <option value="San Francisco">San Francisco</option>
+                    <option value="Dallas">Dallas</option>
+                    <option value="Chicago">Chicago</option>
+                    <option value="Houston">Houston</option>
+                </select>
             </div>
 
-            <!-- Arrival City -->
+            <!-- Arrival City (Dropdown) -->
             <div class="input-text">
-                <label for="arrival-city-input">Arrival City:</label>
-                <div class="dropdown">
-                    <input type="text" id="arrival-city-input" name="arrival-city" placeholder="Type to search..." autocomplete="off" required>
-                    <div id="arrival-dropdown-list" class="dropdown-list hidden"></div>
-                </div>
+                <label for="arrival-city">Arrival City:</label>
+                <select name="arrival-city" id="arrival-city" required>
+                    <option value="default">Select</option>
+                    <option value="New York">New York</option>
+                    <option value="Austin">Austin</option>
+                    <option value="San Francisco">San Francisco</option>
+                    <option value="Dallas">Dallas</option>
+                    <option value="Chicago">Chicago</option>
+                    <option value="Houston">Houston</option>
+                </select>
             </div>
 
             <!-- Hotel Stars -->
             <div class="input-text">
-                <label for="features">Hotel: </label>
+                <label for="hotel">Hotel: </label>
                 <select name="hotel-stars" id="hotel" required>
                     <option value="Any">Any</option>
                     <option value="2">2 stars or above</option>
@@ -69,6 +79,7 @@
             <div class="input-text">
                 <label for="budget">Budget:</label>
                 <select id="budget" name="budget">
+                    <option value="default">Select</option>
                     <option value="high">High</option>
                     <option value="medium">Medium</option>
                     <option value="low">Low</option>
@@ -87,23 +98,16 @@
             </div>
 
             <div class="input-text">
-                <textarea id="keyword-input" rows="2" cols="40" placeholder="Type keywords and press Enter"></textarea>
+                <label for="keywords">Keywords:</label>
+                <textarea id="keywords" name="keywords" rows="2" placeholder="Type keywords and separate by commas"></textarea>
             </div>
 
-            <div class="keywords-list">
-                <p>Keywords:</p>
-                <div id="keywords-display"></div>
-            </div>
-
-            <!-- Submit Button -->
             <div class="input-text">
                 <button type="submit">Next</button>
             </div>
-
         </form>
     </div>
 
-    <!-- People traveling + Dropdown search -->
     <script>
         function addPerson() {
             const peopleContainer = document.getElementById('people-traveling');
@@ -121,102 +125,6 @@
             `;
             peopleContainer.insertBefore(select, peopleContainer.lastElementChild);
         }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            const cities = [
-                "New York", "Austin", "San Francisco", "Dallas", "Chicago", "Houston"
-            ];
-
-            const setupDropdown = (inputId, dropdownListId) => {
-                const input = document.getElementById(inputId);
-                const dropdownList = document.getElementById(dropdownListId);
-
-                input.addEventListener("input", () => {
-                    const value = input.value.toLowerCase();
-                    dropdownList.innerHTML = "";
-                    if (value) {
-                        const filteredCities = cities.filter(city => city.toLowerCase().includes(value));
-                        filteredCities.forEach(city => {
-                            const item = document.createElement("div");
-                            item.textContent = city;
-                            item.classList.add("dropdown-item");
-                            item.addEventListener("click", () => {
-                                input.value = city;
-                                dropdownList.innerHTML = "";
-                                dropdownList.classList.add("hidden");
-                            });
-                            dropdownList.appendChild(item);
-                        });
-                        dropdownList.classList.toggle("hidden", filteredCities.length === 0);
-                    } else {
-                        dropdownList.classList.add("hidden");
-                    }
-                });
-            };
-
-            setupDropdown("departure-city-input", "departure-dropdown-list");
-            setupDropdown("arrival-city-input", "arrival-dropdown-list");
-
-            document.addEventListener("click", (event) => {
-                const departureInput = document.getElementById("departure-city-input");
-                const arrivalInput = document.getElementById("arrival-city-input");
-                const departureDropdown = document.getElementById("departure-dropdown-list");
-                const arrivalDropdown = document.getElementById("arrival-dropdown-list");
-
-                if (!departureInput.contains(event.target) && !departureDropdown.contains(event.target) &&
-                    !arrivalInput.contains(event.target) && !arrivalDropdown.contains(event.target)) {
-                    departureDropdown.classList.add("hidden");
-                    arrivalDropdown.classList.add("hidden");
-                }
-            });
-        });
-
-        document.addEventListener("DOMContentLoaded", () => {
-        const keywordInput = document.getElementById('keyword-input');
-        const keywordsDisplay = document.getElementById('keywords-display');
-        let keywords = [];
-
-        // user hits Enter key to store it
-        keywordInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Prevent form submission or new line
-                const keyword = keywordInput.value.trim();
-
-                if (keyword) {
-                    keywords.push(keyword); // Add keyword to the list
-                    keywordInput.value = ''; // Clear the input field
-                    displayKeywords();
-                }
-            }
-        });
-
-        // Function to display keywords underneath the input box
-        function displayKeywords() {
-            keywordsDisplay.innerHTML = ''; // Clear the display area first
-            keywords.forEach((kw, index) => {
-                const keywordElement = document.createElement('div');
-                keywordElement.classList.add('keyword-item');
-                
-                const keywordSpan = document.createElement('span');
-                keywordSpan.textContent = kw;
-                keywordSpan.classList.add('keyword');
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'X';
-                deleteBtn.classList.add('delete-btn');
-                
-                // Add click event listener for removing the keyword
-                deleteBtn.addEventListener('click', () => {
-                    keywords.splice(index, 1); // Remove the keyword from the array
-                    displayKeywords(); // Refresh the display
-                });
-
-                keywordElement.appendChild(keywordSpan);
-                keywordElement.appendChild(deleteBtn);
-                keywordsDisplay.appendChild(keywordElement);
-            });
-        }
-    });
     </script>
 </body>
 </html>

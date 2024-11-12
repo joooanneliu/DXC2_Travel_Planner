@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, url_for, redirect, request, flash
+from flask import Flask, render_template, url_for, redirect, request, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -7,6 +7,8 @@ from forms import LoginForm, SignupForm
 from models import db, User
 from flask_migrate import Migrate
 from datetime import timedelta
+from openai import OpenAI
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/users.db'  # Adjust to use the instance folder's db
@@ -130,6 +132,52 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'success')
     return redirect(url_for('sign_in'))
+
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
+
+@app.route('/generate-itinerary', methods=['GET'])
+def generate_itinerary():
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    departure_city = request.args.get('departure_city')
+    arrival_city = request.args.get('arrival_city')
+    flight_needed = request.args.get('flight_needed')
+    car_needed = request.args.get('car_needed')
+    hotel_stars = request.args.get('hotel_stars')
+    budget = request.args.get('budget')
+
+    user_prompt = f"""
+    Generate travel itinerary
+    - Include timestamps, addresses of locations
+    - Factor in travel time, especially to airport
+    - List costs for each component; total budget only at the end
+    - If renting a car, include rental details at the start
+    Travel dates: from {start_date} to {end_date}
+    Departure city: {departure_city}
+    Arrival city: {arrival_city}
+    Flight required: {flight_needed}
+    Car rental required: {car_needed}
+    Minimum hotel stars: {hotel_stars or "Not specified"}
+    Budget level: {budget or "Not specified"}
+    """
+
+    # Generate response from OpenAI
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {
+                "role": "user",
+                "content": user_prompt
+            }
+        ]
+    )
+
+    # Extract and return the text from OpenAI response
+    itinerary = response.choices[0].message["content"]
+    return jsonify({"itinerary": itinerary})
 
 if __name__ == "__main__":
     app.run(debug=True)

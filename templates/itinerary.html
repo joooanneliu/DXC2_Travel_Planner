@@ -1,30 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Travel Planner</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Assistant">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    {% include 'navbar.html' %}
-    <div class="container">
-        <h1>Full Itinerary:</h1>
-    </div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AI Travel Planner</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Assistant">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        {% include 'navbar.html' %}
+        <div class="container">
+            <h1>Full Itinerary:</h1>
+            <button onclick="viewItinerary()">View Itinerary</button>
+            <button onclick="downloadItinerary()">Download Itinerary</button>
+        </div>
+    
+        <script>
+            // Function to view the itinerary (in a new tab)
+            function viewItinerary() {
+                window.open('/generate-itinerary?action=view', '_blank');
+            }
 
-    <script>
-        // Fetch the AI-generated itinerary from the server
-        fetch('/generate-itinerary')
-            .then(response => response.json())
-            .then(data => {
-                // Display the generated itinerary in the div
-                document.getElementById('itinerary-result').innerHTML = data.itinerary;
-            })
-            .catch(error => {
-                console.error('Error fetching itinerary:', error);
-                document.getElementById('itinerary-result').innerHTML = "<p>Sorry, we couldn't load your itinerary at this time.</p>";
-            });
-    </script>
-</body>
+            // Function to download the itinerary directly
+            function downloadItinerary() {
+                window.location.href = '/generate-itinerary?action=download';
+            }
+        </script>
+    </body>
 </html>

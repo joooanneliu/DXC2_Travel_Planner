@@ -7,3 +7,4 @@ requests==2.26.0
 Flask-Migrate==3.1.0
 SQLAlchemy==1.4.32
 email-validator==2.2.0
+fpdf==1.7.2

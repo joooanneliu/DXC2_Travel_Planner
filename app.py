@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, url_for, redirect, request, flash, jsonify
+from flask import Flask, render_template, url_for, redirect, request, flash, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -9,6 +9,8 @@ from flask_migrate import Migrate
 from datetime import timedelta
 from openai import OpenAI
 from dotenv import load_dotenv
+from fpdf import FPDF
+import json
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/users.db'  # Adjust to use the instance folder's db
@@ -21,6 +23,14 @@ login_manager.init_app(app)
 login_manager.login_view = 'sign_in'  # Redirect users who are not logged in
 
 migrate = Migrate(app, db)
+
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+
+if not api_key:
+    raise ValueError("The OPENAI_API_KEY environment variable is not set.")
+
+client = OpenAI(api_key=api_key)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -124,7 +134,7 @@ def hotel():
 @app.route('/itinerary')
 @login_required
 def itinerary():
-    return "Welcome to the itinerary"
+    return render_template('itinerary.html')
 
 @app.route('/logout')
 @login_required
@@ -132,10 +142,6 @@ def logout():
     logout_user()
     flash('You have been logged out.', 'success')
     return redirect(url_for('sign_in'))
-
-load_dotenv()
-api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=api_key)
 
 @app.route('/generate-itinerary', methods=['GET'])
 def generate_itinerary():
@@ -148,23 +154,30 @@ def generate_itinerary():
     hotel_stars = request.args.get('hotel_stars')
     budget = request.args.get('budget')
 
-    user_prompt = f"""
-    Generate travel itinerary
-    - Include timestamps, addresses of locations
-    - Factor in travel time, especially to airport
-    - List costs for each component; total budget only at the end
-    - If renting a car, include rental details at the start
-    Travel dates: from {start_date} to {end_date}
-    Departure city: {departure_city}
-    Arrival city: {arrival_city}
-    Flight required: {flight_needed}
-    Car rental required: {car_needed}
-    Minimum hotel stars: {hotel_stars or "Not specified"}
-    Budget level: {budget or "Not specified"}
-    """
+    user_prompt = f"""Generate a detailed travel itinerary in JSON format. Ensure the itinerary includes all necessary details such as timestamps, addresses, travel durations, and costs. Use the following headers for the JSON structure:
+    json headers: \"header\": \"departure_city\", \"arrival_city\", \"travel_dates\", \"car_rental_info\": \"company\", \"car_type\", \"pick_up_location\", \"pick_up_time\", \"return_location\", \"return_time\", \"total_price\", 
+    \"content\": \"place\", \"location\", \"time_stamp\", \"description\", \"price\"\n
+    Requirements: 
+    1. Travel Dates: From {start_date} to {end_date}
+    2. Departure City: {departure_city}
+    3. Arrival City: {arrival_city}
+    4. Flight Required: {flight_needed} - Outbound: DL1250, AUS to JFK, 4:03 PM to 8:59 PM, $368 - Return: DL1167, JFK to AUS, 1:13 PM to 4:25 PM
+    5. Hotel Details: - Name: Hyatt Grand Central New York - Price: $2,589 
+    6. Car Rental Required: {car_needed} - If renting a car, include rental details at the start of the itinerary under \"car_rental_info\". If not, leave \"car_rental_info\" as an empty object. 
+    7. Budget Level: {budget or "Not specified"} 
+    8. Additional Details: - Factor in travel time to/from the airport. 
+    - Include descriptions of activities or places to visit in destination.
+    - Provide a timestamp and detailed cost for each activity.
+    - All numbers for prices"""
+
+    # simple user prompt to test with
+    # user_prompt = f'''return json object where json headers: \"header\": \"departure city\", \"arrival city\", \"travel dates\", \"car rental info\", \"content\": \"place\", \"location\", \"time stamp\", \"description\", \"price\"\n, one for header and car rental, two content items 
+    # always number as a string for price'''
+
+    # test link: http://127.0.0.1:5000/generate-itinerary?start_date=2024-12-01&end_date=2024-12-05&departure_city=New+York&arrival_city=Los+Angeles&flight_needed=yes&car_needed=yes&hotel_stars=4&budget=mid?action=view
 
     # Generate response from OpenAI
-    response = client.chat.completions.create(
+    completion = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
@@ -172,12 +185,90 @@ def generate_itinerary():
                 "role": "user",
                 "content": user_prompt
             }
-        ]
+        ],
+        response_format={
+            "type": "json_object"
+        }
     )
 
-    # Extract and return the text from OpenAI response
-    itinerary = response.choices[0].message["content"]
-    return jsonify({"itinerary": itinerary})
+    # Response
+    pdf_content_string = completion.choices[0].message.content
+    pdf_content = json.loads(pdf_content_string)
+    
+    # Generate PDF
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+
+    # # Add Header Section
+    header = pdf_content['header']
+    pdf.set_font("Arial", style='B', size=14)
+    pdf.cell(0, 10, "Travel Itinerary", ln=True, align='C')
+    # pdf.multi_cell(0, 10, pdf_content_string)
+    pdf.ln(10)
+
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, f"Departure City: {header['departure_city']}", ln=True)
+    pdf.cell(0, 10, f"Arrival City: {header['arrival_city']}", ln=True)
+    pdf.cell(0, 10, f"Travel Dates: From {header['travel_dates']['start_date']} to {header['travel_dates']['end_date']}", ln=True)
+    pdf.ln(5)
+
+    # Add Car Rental Info
+    car_rental = header.get('car rental info', {})
+    if car_rental:
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, "Car Rental Information:", ln=True)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(0, 10, f"  Company: {car_rental.get('company', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Car Type: {car_rental.get('car_type', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Pickup Location: {car_rental.get('pickup_location', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Pickup Time: {car_rental.get('pickup_time', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Return Location: {car_rental.get('return_location', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Return Time: {car_rental.get('return_time', 'N/A')}", ln=True)
+        pdf.ln(10)
+
+    content_list = pdf_content.get('content', [])
+    total_price = 0
+    if content_list:
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, "Schedule:", ln=True)
+        pdf.ln(5)
+    
+        for content in content_list:
+            if isinstance(content, dict):  # Check if content is a dictionary
+                price = content.get('price', '0')
+                total_price += price
+                pdf.set_font("Arial", size=12)
+                pdf.cell(0, 10, f"  Place: {content.get('place', 'N/A')}", ln=True)
+                pdf.cell(0, 10, f"  Location: {content.get('location', 'N/A')}", ln=True)
+                pdf.cell(0, 10, f"  Time Stamp: {content.get('time_stamp', 'N/A')}", ln=True)
+                pdf.multi_cell(0, 10, f"  Description: {content.get('description', 'N/A')}")
+                pdf.cell(0, 10, f"  Price: ${content.get('price', 'N/A')}", ln=True)
+                pdf.ln(10)
+            elif isinstance(content, str):  # Handle string content
+                pdf.set_font("Arial", size=12)
+                pdf.multi_cell(0, 10, f"  Note: {content}")
+                pdf.ln(5)
+    else:
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, "No destination information available.", ln=True)
+
+    pdf.set_font("Arial", style='B', size=12)
+    pdf.cell(0, 10, "Total Price Summary:", ln=True)
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, f"  Total Price: ${total_price}", ln=True)
+    pdf.ln(10)
+
+    # Determine if the PDF should be downloaded or displayed inline
+    disposition = "inline" if request.args.get("action") == "view" else "attachment"
+
+    # Create a response with the PDF
+    response = make_response(pdf.output(dest='S').encode('latin1'))
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'{disposition}; filename=itinerary.pdf'
+
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)

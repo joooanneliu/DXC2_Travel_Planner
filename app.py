@@ -125,7 +125,7 @@ def confirmation():
                            
 
 
-@app.route('/flightarrival')
+@app.route('/flightdeparture')
 @login_required
 def flight_car_API_call():
     start_date = request.args.get('start_date')
@@ -182,7 +182,7 @@ def flight_car_API_call():
 
     return "Welcome to the flight and cars page. Please return "
 
-@app.route('/flightdeparture')
+@app.route('/flightarrival')
 @login_required
 def deaprtureflight():
     return "Welcome to the departure flight"

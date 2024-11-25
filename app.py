@@ -9,9 +9,11 @@ from flask_migrate import Migrate
 from datetime import timedelta
 from openai import OpenAI
 from dotenv import load_dotenv
+from serpapi import GoogleSearch
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/users.db'  # Adjust to use the instance folder's db
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.urandom(24)  # Needed for sessions
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=30)
 db.init_app(app)
@@ -72,6 +74,7 @@ def trip_input():
         arrival_city = request.form.get('arrival-city')
         hotel_stars = request.form.get('hotel-stars')
         budget = request.form.get('budget')
+        keywords = request.form.get('keywords', '')
 
         transport_mode = request.form.get('transport-mode')
         if transport_mode == "Flight":
@@ -83,18 +86,18 @@ def trip_input():
             car_needed = "Yes"
         else:
             car_needed = "No"
-
+        
         # Pass data directly to confirmation.html
         return redirect(url_for('confirmation', start_date=start_date, end_date=end_date,
                                 departure_city=departure_city, arrival_city=arrival_city,
                                 flight_needed=flight_needed, car_needed=car_needed,
-                                hotel_stars=hotel_stars, budget=budget))
+                                hotel_stars=hotel_stars, budget=budget, keywords=keywords))
     
     # GET request to render the trip input form
     return render_template('trip-input.html')
 
 
-@app.route('/confirmation')
+@app.route('/confirmation', methods=["POST", "GET"])
 @login_required
 def confirmation():
     start_date = request.args.get('start_date')
@@ -104,17 +107,85 @@ def confirmation():
     flight_needed = request.args.get('flight_needed')
     hotel_stars = request.args.get('hotel_stars')
     car_needed = request.args.get('car_needed')
+    budget = request.args.get('budget')
+    keywords = request.args.get('keywords')
+    
+    if request.method=="POST":
+        return redirect(url_for('flightandcar', start_date=start_date, end_date=end_date,
+                                departure_city=departure_city, arrival_city=arrival_city,
+                                flight_needed=flight_needed, car_needed=car_needed,
+                                hotel_stars=hotel_stars, budget=budget))
+    
 
     return render_template('confirmation.html', start_date=start_date, end_date=end_date,
                            departure_city=departure_city, arrival_city=arrival_city,
                            flight_needed=flight_needed, hotel_stars=hotel_stars,
                            car_needed=car_needed)
 
+                           
 
-@app.route('/flightandcar')
+
+@app.route('/flightarrival')
 @login_required
-def flight_car():
-    return "Welcome to the flight and cars page"
+def flight_car_API_call():
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    departure_city = request.args.get('departure_city')
+    arrival_city = request.args.get('arrival_city')
+    budget = request.args.get('budget')
+    keywords = request.args.get('keywords')
+
+    #departure flight call 
+    params= { 
+        "departure_id": departure_city,
+        "arrival_id":arrival_city,
+        "engine":'google_flights',
+        "gl":"us",
+        "hl": "en",
+        "currency":"USD",
+        #Advanced Google Flights parameters
+        "type":"1",
+        "outbound_date":start_date,
+        "return_date": end_date,
+        "adults":1,
+        "children":0,
+        "max_price":budget,
+        "api_key": "serpAPI_key"
+
+        }
+    departureSearch= GoogleSearch(params)
+    departureResults=departureSearch.get_dict()
+    #grabbing flights entry in best flights list with 4 flights
+    best_flights=departureResults["best_flights"][0]
+
+
+    #arrival flight API call
+    params= { 
+        "departure_id": departure_city,
+        "arrival_id":arrival_city,
+        "engine":'google_flights',
+        "gl":"us",
+        "hl": "en",
+        "currency":"USD",
+        #Advanced Google Flights parameters
+        "type":"1",
+        "outbound_date":start_date,
+        "return_date": end_date,
+        "adults":1,
+        "children":0,
+        "max_price":budget,
+        "api_key": "serpAPI_key"
+
+        }
+    arrivalSearch= GoogleSearch(params)
+    arrivalResults=arrivalSearch.get_dict()
+
+    return "Welcome to the flight and cars page. Please return "
+
+@app.route('/flightdeparture')
+@login_required
+def deaprtureflight():
+    return "Welcome to the departure flight"
 
 @app.route('/hotel')
 @login_required
@@ -133,9 +204,14 @@ def logout():
     flash('You have been logged out.', 'success')
     return redirect(url_for('sign_in'))
 
+#OpenAI 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 client = OpenAI(api_key=api_key)
+
+#SerpAPI
+#serpAPI_key=os.getenv("OPENSERP_API_KEY")
+
 
 @app.route('/generate-itinerary', methods=['GET'])
 def generate_itinerary():

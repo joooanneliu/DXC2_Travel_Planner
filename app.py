@@ -27,6 +27,8 @@ login_manager.login_view = 'sign_in'  # Redirect users who are not logged in
 migrate = Migrate(app, db)
 
 load_dotenv()
+#SERPAPI Key
+serpAPI_key=os.getenv("OPENSERP_API_KEY")
 api_key = os.getenv("OPENAI_API_KEY")
 
 if not api_key:
@@ -121,7 +123,7 @@ def confirmation():
     keywords = request.args.get('keywords')
     
     if request.method=="POST":
-        return redirect(url_for('flightandcar', start_date=start_date, end_date=end_date,
+        return redirect(url_for('outboundFlight', start_date=start_date, end_date=end_date,
                                 departure_city=departure_city, arrival_city=arrival_city,
                                 flight_needed=flight_needed, car_needed=car_needed,
                                 hotel_stars=hotel_stars, budget=budget))
@@ -135,7 +137,7 @@ def confirmation():
                            
 
 
-@app.route('/flightdeparture')
+@app.route('/outboundFlight')
 @login_required
 def flight_car_API_call():
     start_date = request.args.get('start_date')
@@ -144,58 +146,234 @@ def flight_car_API_call():
     arrival_city = request.args.get('arrival_city')
     budget = request.args.get('budget')
     keywords = request.args.get('keywords')
-
-    #departure flight call 
-    params= { 
+    hotel_stars = request.args.get('hotel_stars')
+    flight_needed = request.args.get('flight_needed')
+    car_needed=request.args.get('car_needed')
+ 
+    OutBoundParams= { 
         "departure_id": departure_city,
         "arrival_id":arrival_city,
         "engine":'google_flights',
         "gl":"us",
         "hl": "en",
         "currency":"USD",
+
         #Advanced Google Flights parameters
         "type":"1",
         "outbound_date":start_date,
         "return_date": end_date,
-        "adults":1,
-        "children":0,
+        "adults":1,#need to update with adults num variable
+        "children":0, #need to update with child num variable
         "max_price":budget,
         "api_key": "serpAPI_key"
 
         }
-    departureSearch= GoogleSearch(params)
-    departureResults=departureSearch.get_dict()
-    #grabbing flights entry in best flights list with 4 flights
-    best_flights=departureResults["best_flights"][0]
 
+    OutBoundSearch= GoogleSearch(OutBoundParams)
+    results = OutBoundSearch.get_dict()
 
-    #arrival flight API call
-    params= { 
-        "departure_id": departure_city,
-        "arrival_id":arrival_city,
-        "engine":'google_flights',
-        "gl":"us",
-        "hl": "en",
-        "currency":"USD",
-        #Advanced Google Flights parameters
-        "type":"1",
-        "outbound_date":start_date,
-        "return_date": end_date,
-        "adults":1,
-        "children":0,
-        "max_price":budget,
-        "api_key": "serpAPI_key"
+    OutBound_flight_list=[]
 
-        }
-    arrivalSearch= GoogleSearch(params)
-    arrivalResults=arrivalSearch.get_dict()
+    OutBound_results= results
+    search_info=OutBound_results['search_metadata']
+    status=search_info['status']
+    if status=='Success':
+        if 'best_flights' in OutBound_results.keys():
+            first_flight=OutBound_results["best_flights"][0]
+            second_flight=OutBound_results["best_flights"][1]
+            third_flight=OutBound_results["best_flights"][2]
+            OutBound_flight_list.append(first_flight)
+            OutBound_flight_list.append(second_flight)
+            OutBound_flight_list.append(third_flight)
 
-    return "Welcome to the flight and cars page. Please return "
+            OutBound_flight1=[]
+            OutBound_flight2=[]
+            OutBound_flight3=[]
 
-@app.route('/flightarrival')
+            counter=1
+            for items in OutBound_flight_list:
+                if counter==4:
+                    break
+                else:
+                    for one in items['flights']:
+                        if counter==1:
+                            OutBound_flight1.append(one['flight_number'])
+                            OutBound_flight1.append(items['price'])
+                            OutBound_flight1.append(one['departure_airport']['name'])
+                            OutBound_flight1.append(one['departure_airport']['time'].split()[0])
+                            OutBound_flight1.append(one['departure_airport']['time'].split()[1])
+                            OutBound_flight1.append(one['arrival_airport']['name'])
+                            OutBound_flight1.append(one['arrival_airport']['time'].split()[0])
+                            OutBound_flight1.append(one['arrival_airport']['time'].split()[1])
+                            OutBound_flight1.append(items['departure_token'])  
+
+                        elif counter==2:
+                            OutBound_flight2.append(one['flight_number'])
+                            OutBound_flight2.append(items['price'])
+                            OutBound_flight2.append(one['departure_airport']['name'])
+                            OutBound_flight2.append(one['departure_airport']['time'].split()[0])
+                            OutBound_flight2.append(one['departure_airport']['time'].split()[1])
+                            OutBound_flight2.append(one['arrival_airport']['name'])
+                            OutBound_flight2.append(one['arrival_airport']['time'].split()[0])
+                            OutBound_flight2.append(one['arrival_airport']['time'].split()[1])
+                            OutBound_flight2.append(items['departure_token'])
+                    
+                        else:
+                            OutBound_flight3.append(one['flight_number'])
+                            OutBound_flight3.append(items['price'])
+                            OutBound_flight3.append(one['departure_airport']['name'])
+                            OutBound_flight3.append(one['departure_airport']['time'].split()[0])
+                            OutBound_flight3.append(one['departure_airport']['time'].split()[1])
+                            OutBound_flight3.append(one['arrival_airport']['name'])
+                            OutBound_flight3.append(one['arrival_airport']['time'].split()[0])
+                            OutBound_flight3.append(one['arrival_airport']['time'].split()[1])
+                            OutBound_flight3.append(items['departure_token'])
+
+                        counter+=1
+
+            Outbound_flight1_code, Outbound_flight1_cost, Outbound_flight1_departure_airport, Outbound_flight1_startDate, Outbound_flight1_startTime, Outbound_flight1_arrival_airport, Outbound_flight1_endDate, Outbound_flight1_endTime, Outbound_flight1_dep_token =OutBound_flight1
+            Outbound_flight2_code, Outbound_flight2_cost, Outbound_flight2_departure_airport, Outbound_flight2_startDate, Outbound_flight2_startTime, Outbound_flight2_arrival_airport, Outbound_flight2_endDate, Outbound_flight2_endTime, Outbound_flight2_dep_token =OutBound_flight2
+            Outbound_flight3_code, Outbound_flight3_cost, Outbound_flight3_departure_airport, Outbound_flight3_startDate, Outbound_flight3_startTime, Outbound_flight3_arrival_airport, Outbound_flight3_endDate, Outbound_flight3_endTime, Outbound_flight3_dep_token =OutBound_flight3
+            #creating strings for OpenAI
+            OutboundFlight1_details=','.join(map(str,OutBound_flight1))
+            OutboundFlight2_details=','.join(map(str,OutBound_flight2))
+            OutboundFlight3_details=','.join(map(str,OutBound_flight3))
+
+        if request.method=="POST":
+            return redirect(url_for('flightarrival', start_date=start_date, end_date=end_date,
+                                departure_city=departure_city, arrival_city=arrival_city,
+                                keywords=keywords,flight_needed=flight_needed, car_needed=car_needed,hotel_stars=hotel_stars, budget=budget,Outbound_flight1_dep_token=Outbound_flight1_dep_token or None,
+                                Outbound_flight2_dep_token=Outbound_flight2_dep_token or None,Outbound_flight3_dep_token=Outbound_flight3_dep_token or None, status=status or None,
+                                OutboundFlight1_details=OutboundFlight1_details or None,OutboundFlight2_details=OutboundFlight2_details or None,
+                                OutboundFlight3_details=OutboundFlight3_details or None))
+        
+        
+        else:
+            #if no results were found given parameters
+            print("No flights were found for in the search given selected options. Please try again.")
+            return False
+    else:
+        #if error with api
+        print(f"success status: {status}")
+        
+    return render_template('outboundFlight.html', start_date=start_date, end_date=end_date,
+                           departure_city=departure_city, arrival_city=arrival_city
+                           ,Outbound_flight1_code=Outbound_flight1_code or None,Outbound_flight1_cost=Outbound_flight1_cost or None,
+                           Outbound_flight1_departure_airport=Outbound_flight1_departure_airport or None,Outbound_flight1_startDate=Outbound_flight1_startDate or None,
+                           Outbound_flight1_startTime=Outbound_flight1_startTime or None,Outbound_flight1_arrival_airport=Outbound_flight1_arrival_airport or None,
+                           Outbound_flight1_endDate=Outbound_flight1_endDate or None,Outbound_flight1_endTime=Outbound_flight1_endTime or None,Outbound_flight1_dep_token=Outbound_flight1_dep_token or None,
+                            Outbound_flight2_code=Outbound_flight2_code or None,Outbound_flight2_cost=Outbound_flight2_cost or None,
+                           Outbound_flight2_departure_airport=Outbound_flight2_departure_airport or None,Outbound_flight2_startDate=Outbound_flight2_startDate or None,
+                           Outbound_flight2_startTime=Outbound_flight2_startTime or None,Outbound_flight2_arrival_airport=Outbound_flight2_arrival_airport or None,
+                           Outbound_flight2_endDate=Outbound_flight2_endDate or None,Outbound_flight2_endTime=Outbound_flight2_endTime or None,Outbound_flight2_dep_token=Outbound_flight2_dep_token or None,
+                           Outbound_flight3_code=Outbound_flight3_code or None,Outbound_flight3_cost=Outbound_flight3_cost or None,
+                           Outbound_flight3_departure_airport=Outbound_flight3_departure_airport or None,Outbound_flight3_startDate=Outbound_flight3_startDate or None,
+                           Outbound_flight3_startTime=Outbound_flight3_startTime or None,Outbound_flight3_arrival_airport=Outbound_flight3_arrival_airport or None,
+                           Outbound_flight3_endDate=Outbound_flight3_endDate or None,Outbound_flight3_endTime=Outbound_flight3_endTime or None,Outbound_flight3_dep_token=Outbound_flight3_dep_token or None
+                           )
+@app.route('/returnFlight')
 @login_required
 def deaprtureflight():
-    return "Welcome to the departure flight"
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    departure_city = request.args.get('departure_city')
+    arrival_city = request.args.get('arrival_city')
+    flight_needed = request.args.get('flight_needed')
+    car_needed=request.args.get('car_needed')
+    budget = request.args.get('budget')
+    keywords = request.args.get('keywords')
+    hotel_stars = request.args.get('hotel_stars')
+    status = request.args.get('status')
+    Outbound_flight1_dep_token=request.args.get('Outbound_flight1_dep_token')
+    Outbound_flight2_dep_token=request.args.get('Outbound_flight2_dep_token')
+    Outbound_flight3_dep_token=request.args.get('Outbound_flight3_dep_token')
+    #arrival flight API call
+    returnParams= { 
+        "departure_id": departure_city,
+        "arrival_id":arrival_city,
+        "engine":'google_flights',
+        "gl":"us",
+        "hl": "en",
+        "currency":"USD",
+        #Advanced Google Flights parameters
+        "type":"1",
+        "outbound_date":start_date,
+        "return_date": end_date,
+        "adults":1,
+        "children":0,
+        "max_price":budget,
+        "api_key": "serpAPI_key"
+
+        }
+    def returnFlight(returnparams,dep_token,departureList):
+            returnparams['departure_token']=dep_token
+            returnSearch= GoogleSearch(returnparams)
+            return_results = returnSearch.get_dict()
+            if 'other_flights' in return_results.keys():
+                first_return_flight=return_results['other_flights'][0]
+                for infomation in first_return_flight['flights']:
+                    departureList.append(infomation['flight_number'])
+                    departureList.append(first_return_flight['price'])
+                    departureList.append(infomation['departure_airport']['name'])
+                    departureList.append(infomation['departure_airport']['time'].split()[0])
+                    departureList.append(infomation['departure_airport']['time'].split()[1])
+                    departureList.append(infomation['arrival_airport']['name'])
+                    departureList.append(infomation['arrival_airport']['time'].split()[0])
+                    departureList.append(infomation['arrival_airport']['time'].split()[1])
+                return (departureList)
+            else:
+                return (departureList)
+
+    returnFlight1=[]
+    returnFlight2=[]
+    returnFlight3=[]
+    if status=='Success':
+
+        returnFlight(returnParams, Outbound_flight1_dep_token,returnFlight1)
+        returnFlight(returnParams, Outbound_flight2_dep_token,returnFlight2)
+        returnFlight(returnParams, Outbound_flight3_dep_token,returnFlight3)
+
+        if returnFlight1 & returnFlight2 & returnFlight3:
+            returnFlight1_code, returnFlight1_cost, returnFlight1_departure_airport, returnFlight1_startDate, returnFlight1_startTime, returnFlight1_arrival_airport, returnFlight1_endDate, returnFlight1_endTime =returnFlight1
+            returnFlight2_code, returnFlight2_cost, returnFlight2_departure_airport, returnFlight2_startDate, returnFlight2_startTime, returnFlight2_arrival_airport, returnFlight2_endDate, returnFlight2_endTime =returnFlight2
+            returnFlight3_code, returnFlight3_cost, returnFlight3_departure_airport, returnFlight3_startDate, returnFlight3_startTime, returnFlight3_arrival_airport, returnFlight3_endDate, returnFlight3_endTime =returnFlight3
+    
+            #Creating OpenAI string w/ return flight details
+            ReturnFlight1_details=','.join(map(str,returnFlight1))
+            ReturnFlight2_details=','.join(map(str,returnFlight2))
+            ReturnFlight3_details=','.join(map(str,returnFlight3))
+
+        else:
+            message="No flights found with chosen prefernces"
+            return message
+    
+    else:
+        print("Error with API")
+        print(f"success status: {status}")
+
+    if request.method=="POST":
+            return redirect(url_for('hotel', start_date=start_date, end_date=end_date,
+                                departure_city=departure_city, arrival_city=arrival_city,
+                                flight_needed=flight_needed, car_needed=car_needed,hotel_stars=hotel_stars, budget=budget,
+                                ReturnFlight1_details=ReturnFlight1_details or None,ReturnFlight2_details=ReturnFlight2_details or None,ReturnFlight3_details=ReturnFlight3_details or None))
+    
+    return render_template('returnFlight.html', start_date=start_date, end_date=end_date,
+                           departure_city=departure_city, arrival_city=arrival_city,
+                            hotel_stars=hotel_stars,returnFlight1_code=returnFlight1_code,returnFlight1_cost=returnFlight1_cost,
+                            returnFlight1_departure_airport=returnFlight1_departure_airport or None,returnFlight1_startDate=returnFlight1_startDate or None,
+                            returnFlight1_startTime=returnFlight1_startTime or None,returnFlight1_arrival_airport=returnFlight1_arrival_airport or None,
+                           returnFlight1_endDate=returnFlight1_endDate or None,returnFlight1_endTime=returnFlight1_endTime or None,
+                           
+                           returnFlight2_code=returnFlight2_code or None,returnFlight2_cost=returnFlight2_cost or None,
+                            returnFlight2_departure_airport=returnFlight2_departure_airport or None,returnFlight2_startDate=returnFlight2_startDate or None,
+                            returnFlight2_startTime=returnFlight2_startTime or None,returnFlight2_arrival_airport=returnFlight2_arrival_airport or None,
+                           returnFlight2_endDate=returnFlight2_endDate or None,returnFlight2_endTime=returnFlight2_endTime or None,
+
+                           returnFlight3_code=returnFlight3_code or None,returnFlight3_cost=returnFlight3_cost or None,
+                            returnFlight3_departure_airport=returnFlight3_departure_airport or None,returnFlight3_startDate=returnFlight3_startDate or None,
+                            returnFlight3_startTime=returnFlight3_startTime or None,returnFlight3_arrival_airport=returnFlight3_arrival_airport or None,
+                           returnFlight3_endDate=returnFlight3_endDate or None,returnFlight3_endTime=returnFlight3_endTime or None,
+                           )
 
 @app.route('/hotel')
 @login_required

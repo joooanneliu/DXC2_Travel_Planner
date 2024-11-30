@@ -77,33 +77,27 @@ def register():
 @login_required
 def trip_input():
     if request.method == "POST":
-        # Get the form data from request.form
         start_date = request.form.get('start-date')
         end_date = request.form.get('end-date')
         departure_city = request.form.get('departure-city')
         arrival_city = request.form.get('arrival-city')
         hotel_stars = request.form.get('hotel-stars')
         budget = request.form.get('budget')
-        keywords = request.form.get('keywords', '')
+
+        num_adults = request.form.get('adults', 0) 
+        num_children = request.form.get('children', 0) 
 
         transport_mode = request.form.get('transport-mode')
-        if transport_mode == "Flight":
-            flight_needed = "Yes"
-        else:
-            flight_needed = "No"
-        
-        if  transport_mode == "Car":
-            car_needed = "Yes"
-        else:
-            car_needed = "No"
-        
-        # Pass data directly to confirmation.html
+        flight_needed = "Yes" if transport_mode == "Flight" else "No"
+        car_needed = "Yes" if transport_mode == "Car" else "No"
+        keywords = request.form.get('keywords', '')
+
         return redirect(url_for('confirmation', start_date=start_date, end_date=end_date,
                                 departure_city=departure_city, arrival_city=arrival_city,
+                                num_adults=num_adults,num_children=num_children,
                                 flight_needed=flight_needed, car_needed=car_needed,
                                 hotel_stars=hotel_stars, budget=budget, keywords=keywords))
-    
-    # GET request to render the trip input form
+
     return render_template('trip-input.html')
 
 
@@ -114,24 +108,19 @@ def confirmation():
     end_date = request.args.get('end_date')
     departure_city = request.args.get('departure_city')
     arrival_city = request.args.get('arrival_city')
+    num_adults = request.args.get('num_adults')
+    num_children = request.args.get('num_children')
     flight_needed = request.args.get('flight_needed')
-    hotel_stars = request.args.get('hotel_stars')
     car_needed = request.args.get('car_needed')
+    hotel_stars = request.args.get('hotel_stars')
     budget = request.args.get('budget')
     keywords = request.args.get('keywords')
-    
-    if request.method=="POST":
-        return redirect(url_for('flightandcar', start_date=start_date, end_date=end_date,
-                                departure_city=departure_city, arrival_city=arrival_city,
-                                flight_needed=flight_needed, car_needed=car_needed,
-                                hotel_stars=hotel_stars, budget=budget))
-    
 
     return render_template('confirmation.html', start_date=start_date, end_date=end_date,
                            departure_city=departure_city, arrival_city=arrival_city,
-                           flight_needed=flight_needed, hotel_stars=hotel_stars,
-                           car_needed=car_needed)
-
+                           num_adults=num_adults,num_children=num_children,
+                           flight_needed=flight_needed, car_needed=car_needed,
+                           hotel_stars=hotel_stars, budget=budget, keywords=keywords)
                            
 
 

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Register</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Assistant" >
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        {% include 'navbar.html' %}
+        <div class="container">
+            <h1 class="auth-title">Create your dream trip <br> itinerary with just one click!</h1>
+            <form method="POST" action="{{ url_for("register") }}" class="auth-form">
+                {{ form.hidden_tag() }}
+                <p>
+                    {{ form.username.label }}
+                    <br>
+                    {{ form.username(class_="auth-input", size=32) }}
+                    <br>
+                    {% for error in form.username.errors %}<span class="error">[{{ error }}]</span>{% endfor %}
+                </p>
+                <p>
+                    {{ form.email.label }}
+                    <br>
+                    {{ form.email(class_="auth-input", size=32) }}
+                    <br>
+                    {% for error in form.email.errors %}<span class="error">[{{ error }}]</span>{% endfor %}
+                </p>
+                <p>
+                    {{ form.password.label }}
+                    <br>
+                    {{ form.password(class_="auth-input", size=32) }}
+                    <br>
+                    {% for error in form.password.errors %}<span class="error">[{{ error }}]</span>{% endfor %}
+                </p>
+                <p>
+                    {{ form.confirm_password.label }}
+                    <br>
+                    {{ form.confirm_password(class_="auth-input", size=32) }}
+                    <br>
+                    {% for error in form.confirm_password.errors %}<span class="error">[{{ error }}]</span>{% endfor %}
+                </p>
+                <div class="submit-btn-container">
+                    <button type="submit" class="auth-submit-btn">Sign Up</button>
+                </div>
+            </form>
+        </div>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    </body>
+</html>

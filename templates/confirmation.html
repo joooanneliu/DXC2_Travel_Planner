@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmation Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% include 'navbar.html' %}
+    <div class="container">
+        <h1>Travel Details Confirmation</h1>
+        <div id="details">
+            <p><strong>Travel Dates:</strong> From {{ start_date }} to {{ end_date }}</p>
+            <p><strong>Departure City:</strong> {{ departure_city or 'Not provided' }}</p>
+            <p><strong>Arrival City:</strong> {{ arrival_city or 'Not provided' }}</p>
+            <p><strong>Need to Book Flight:</strong> {{ flight_needed or 'Not Needed' }}</p>
+            <p><strong>Minimum Hotel Stars Needed:</strong> {{ hotel_stars or 'Not specified' }}</p>
+            <p><strong>Need to Rent Car:</strong> {{ car_needed or 'Not Needed' }}</p>
+        </div>
+
+        <button type="submit" id="edit-button">Edit Details</button>
+    </div>
+
+    <script>
+        // Event listener for the edit button
+        document.getElementById('edit-button').addEventListener('click', function() {
+            window.history.back(); // Go back to the previous form
+        });
+    </script>
+</body>
+</html>

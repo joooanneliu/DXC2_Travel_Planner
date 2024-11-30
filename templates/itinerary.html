@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>AI Travel Planner</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Assistant">
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    </head>
+    <body>
+        {% include 'navbar.html' %}
+        <div class="container">
+            <h1>Full Itinerary:</h1>
+            <button onclick="viewItinerary()">View Itinerary</button>
+            <button onclick="downloadItinerary()">Download Itinerary</button>
+        </div>
+    
+        <script>
+            // Function to view the itinerary (in a new tab)
+            function viewItinerary() {
+                window.open('/generate-itinerary?action=view', '_blank');
+            }
+
+            // Function to download the itinerary directly
+            function downloadItinerary() {
+                window.location.href = '/generate-itinerary?action=download';
+            }
+        </script>
+    </body>
+</html>

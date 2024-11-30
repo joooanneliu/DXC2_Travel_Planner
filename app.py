@@ -229,6 +229,21 @@ def generate_itinerary():
     hotel_stars = request.args.get('hotel_stars')
     budget = request.args.get('budget')
 
+    if not all([start_date, end_date, departure_city, arrival_city, flight_needed, car_needed, hotel_stars, budget]):
+        # Create an instance of FPDF
+        pdf = FPDF()
+        pdf.add_page()  # Add a blank page
+
+        # Optional: Add minimal content, like a title or message
+        pdf.set_font("Arial", size=12)
+        pdf.cell(0, 10, "Missing fields to generate itinerary", ln=True, align="C")
+
+        # Output PDF as a binary response
+        response = make_response(pdf.output(dest='S').encode('latin1'))
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = 'inline; filename=blank_document.pdf'
+        return response
+
     user_prompt = f"""Generate a detailed travel itinerary in JSON format. Ensure the itinerary includes all necessary details such as timestamps, addresses, travel durations, and costs. Use the following headers for the JSON structure:
     json headers: \"header\": \"departure_city\", \"arrival_city\", \"travel_dates\", \"car_rental_info\": \"company\", \"car_type\", \"pick_up_location\", \"pick_up_time\", \"return_location\", \"return_time\", \"total_price\", 
     \"content\": \"place\", \"location\", \"time_stamp\", \"description\", \"price\"\n

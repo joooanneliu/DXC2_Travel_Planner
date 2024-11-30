@@ -1,1 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Options</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navigation bar -->
+    {% include 'navbar.html' %}
+    <div class="container">
+        <h1>Hotel Options</h1>
 
+        <!-- Sort Dropdown (optional) -->
+        <div class="sort-container">
+            <label for="sort-options">Sort by:</label>
+            <select id="sort-options" name="sort-options" onchange="sortHotels(this.value)">
+                <option value="price-asc">Price - Ascending</option>
+                <option value="price-desc">Price - Descending</option>
+                <option value="rating-asc">Rating - Ascending</option>
+                <option value="rating-desc">Rating - Descending</option>
+            </select>
+        </div>
+
+        <!-- Display hotels -->
+        <div class="hotel-list">
+            {% for hotel in hotels %}
+            <div class="hotel-option">
+                <img src="{{ hotel.images[0].thumbnail }}" alt="{{ hotel.name }}" class="hotel-image">
+                <div class="hotel-info">
+                    <strong>{{ hotel.name }}</strong><br>
+                    Rating: {{ hotel.overall_rating }} / 5<br>
+                    Price per night: {{ hotel.rate_per_night.lowest }}<br>
+                </div>
+            </div>
+            {% else %}
+            <p>No hotels available</p>
+            {% endfor %}
+        </div>
+
+        <!-- Submit button -->
+        <form action="{{ url_for('itinerary') }}" method="POST">
+            <button type="submit" id="confirm">Next</button>
+        </form>
+    </div>
+
+    <script>
+        // Sorting logic (optional)
+        function sortHotels(value) {
+            console.log("Sorting by:", value);
+            // Implement sorting logic here if needed
+        }
+    </script>
+</body>
+</html>

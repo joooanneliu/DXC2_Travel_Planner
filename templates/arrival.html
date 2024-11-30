@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Return Flight Options</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navigation bar -->
+    {% include 'navbar.html' %}
+    <div class="container">
+        <h1>Return Flight Options</h1>
+
+        <!-- Sort Dropdown -->
+        <div class="sort-container">
+            <label for="sort-options">Sort by:</label>
+            <select id="sort-options" name="sort-options" onchange="sortFlights(this.value)">
+                <option value="price-asc">Price - Ascending</option>
+                <option value="price-desc">Price - Descending</option>
+                <option value="time-asc">Travel Time - Ascending</option>
+                <option value="time-desc">Travel Time - Descending</option>
+            </select>
+        </div>
+
+        <!-- Flight options -->
+        <form action="{{ url_for('arrival') }}" method="POST">
+            {% for flight in flights %}
+            <div class="flight-option">
+                <input type="radio" id="{{ flight.flight_number }}" name="flight" value="{{ flight.flight_number }}" required>
+                <label for="{{ flight.flight_number }}">
+                    <strong>Flight {{ loop.index }} - ${{ flight.price }}</strong><br>
+                    {{ flight.departure_airport.name }} to {{ flight.arrival_airport.name }}<br>
+                    {{ flight.departure_airport.time }} to {{ flight.arrival_airport.time }}<br>
+                    {% if flight.stopovers %}
+                        <br>Stopovers: {{ flight.stopovers }}
+                    {% endif %}
+                </label>
+            </div>
+            {% else %}
+            <p>No return flights available</p>
+            {% endfor %}
+
+            <!-- Submit button -->
+            <button type="submit" id="confirm">Next</button>
+        </form>
+    </div>
+
+    <script>
+        // Sort flights logic
+        function sortFlights(value) {
+            console.log("Sorting by:", value);
+            // Implement sort logic here
+        }
+    </script>
+</body>
+</html>

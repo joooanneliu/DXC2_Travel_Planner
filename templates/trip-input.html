@@ -61,18 +61,13 @@
             </div>
 
             <!-- People Traveling -->
-            <label>People Traveling:</label>
-            <div class="input-text" id="people-traveling">
-                <select name="people[]">
-                    <option value="0-5 years">0 - 5 years</option>
-                    <option value="6-12 years">6 - 12 years</option>
-                    <option value="13-17 years">13 - 17 years</option>
-                    <option value="18-20 years">18 - 20 years</option>
-                    <option value="21-35 years">21 - 35 years</option>
-                    <option value="36-59 years">36 - 59 years</option>
-                    <option value="60+ years">60+ years</option>
-                </select>
-                <button type="button" id="add-person" onclick="addPerson()">Add person</button>
+            <div class="input-text">
+                <label for="adults">Adults (18+):</label>
+                <input type="number" id="adults" name="adults" min="0" max="10" value="0" required>
+            </div>
+            <div class="input-text">
+                <label for="children">Children (4-17):</label>
+                <input type="number" id="children" name="children" min="0" max="10" value="0">
             </div>
 
             <!-- Budget selection -->
@@ -108,23 +103,5 @@
         </form>
     </div>
 
-    <script>
-        function addPerson() {
-            const peopleContainer = document.getElementById('people-traveling');
-            const select = document.createElement('select');
-            select.name = 'people[]';
-
-            select.innerHTML = `
-                <option value="0-5 years">0 - 5 years</option>
-                <option value="6-12 years">6 - 12 years</option>
-                <option value="13-17 years">13 - 17 years</option>
-                <option value="18-20 years">18 - 20 years</option>
-                <option value="21-35 years">21 - 35 years</option>
-                <option value="36-59 years">36 - 59 years</option>
-                <option value="60+ years">60+ years</option>
-            `;
-            peopleContainer.insertBefore(select, peopleContainer.lastElementChild);
-        }
-    </script>
 </body>
 </html>

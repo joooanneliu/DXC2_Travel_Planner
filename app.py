@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 from fpdf import FPDF
 import json
 from serpapi import GoogleSearch
+from datetime import datetime
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/users.db'  # Adjust to use the instance folder's db
@@ -406,8 +407,14 @@ def generate_itinerary():
     car_needed = request.args.get('car_needed')
     hotel_stars = request.args.get('hotel_stars')
     budget = request.args.get('budget')
+    keywords = request.args.get('keywords')
+    num_adults = request.args.get('adults', 0) 
+    num_children = request.args.get('children', 0) 
+    departing_flight = request.args.get('departing_flight') 
+    returning_flight = request.args.get('returning_flight') 
+    hotel = request.args.get('hotel')
 
-    if not all([start_date, end_date, departure_city, arrival_city, flight_needed, car_needed, hotel_stars, budget]):
+    if not all([start_date, end_date, departure_city, arrival_city, flight_needed, car_needed, hotel_stars, budget, keywords, num_adults, num_children, departing_flight, returning_flight, hotel]):
         # Create an instance of FPDF
         pdf = FPDF()
         pdf.add_page()  # Add a blank page
@@ -416,6 +423,76 @@ def generate_itinerary():
         pdf.set_font("Arial", size=12)
         pdf.cell(0, 10, "Missing fields to generate itinerary", ln=True, align="C")
 
+        if not start_date:
+            pdf.cell(0, 10, "No start date provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Start Date: {start_date}", ln=True, align="C")
+
+        if not end_date:
+            pdf.cell(0, 10, "No end date provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"End Date: {end_date}", ln=True, align="C")
+
+        if not departure_city:
+            pdf.cell(0, 10, "No departure city provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Departure City: {departure_city}", ln=True, align="C")
+
+        if not arrival_city:
+            pdf.cell(0, 10, "No arrival city provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Arrival City: {arrival_city}", ln=True, align="C")
+
+        if not flight_needed:
+            pdf.cell(0, 10, "Flight needed status not provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Flight Needed: {flight_needed}", ln=True, align="C")
+
+        if not car_needed:
+            pdf.cell(0, 10, "Car needed status not provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Car Needed: {car_needed}", ln=True, align="C")
+
+        if not hotel_stars:
+            pdf.cell(0, 10, "Hotel stars not provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Hotel Stars: {hotel_stars}", ln=True, align="C")
+
+        if not budget:
+            pdf.cell(0, 10, "Budget not provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Budget: {budget}", ln=True, align="C")
+
+        if not keywords:
+            pdf.cell(0, 10, "No keywords provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Keywords: {keywords}", ln=True, align="C")
+
+        if not num_adults:
+            pdf.cell(0, 10, "Number of adults not provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Number of Adults: {num_adults}", ln=True, align="C")
+
+        if not num_children:
+            pdf.cell(0, 10, "Number of children not provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Number of Children: {num_children}", ln=True, align="C")
+
+        if not departing_flight:
+            pdf.cell(0, 10, "No departing flight information", ln=True, align="C")
+        else:
+            pdf.multi_cell(0, 10, f"Departing Flight: {departing_flight}", align="L")
+
+        if not returning_flight:
+            pdf.cell(0, 10, "No returning flight information", ln=True, align="C")
+        else:
+            pdf.multi_cell(0, 10, f"Returning Flight: {returning_flight}", align="L")
+
+        if not hotel:
+            pdf.cell(0, 10, "No hotel information provided", ln=True, align="C")
+        else:
+            pdf.cell(0, 10, f"Hotel: {hotel}", ln=True, align="C")
+
         # Output PDF as a binary response
         response = make_response(pdf.output(dest='S').encode('latin1'))
         response.headers['Content-Type'] = 'application/pdf'
@@ -423,26 +500,32 @@ def generate_itinerary():
         return response
 
     user_prompt = f"""Generate a detailed travel itinerary in JSON format. Ensure the itinerary includes all necessary details such as timestamps, addresses, travel durations, and costs. Use the following headers for the JSON structure:
-    json headers: \"header\": \"departure_city\", \"arrival_city\", \"travel_dates\", \"car_rental_info\": \"company\", \"car_type\", \"pick_up_location\", \"pick_up_time\", \"return_location\", \"return_time\", \"total_price\", 
+    json headers: \"header\": \"departure_city\", \"arrival_city\", \"start_date\", \"end_date\", \"car_rental_info\": \"company\", \"car_type\", \"pick_up_location\", \"pick_up_time\", \"return_location\", \"return_time\", \"total_price\", 
     \"content\": \"place\", \"location\", \"time_stamp\", \"description\", \"price\"\n
     Requirements: 
     1. Travel Dates: From {start_date} to {end_date}
     2. Departure City: {departure_city}
     3. Arrival City: {arrival_city}
-    4. Flight Required: {flight_needed} - Outbound: DL1250, AUS to JFK, 4:03 PM to 8:59 PM, $368 - Return: DL1167, JFK to AUS, 1:13 PM to 4:25 PM
-    5. Hotel Details: - Name: Hyatt Grand Central New York - Price: $2,589 
+    4. Flight Required: {flight_needed} {departing_flight} {returning_flight}
     6. Car Rental Required: {car_needed} - If renting a car, include rental details at the start of the itinerary under \"car_rental_info\". If not, leave \"car_rental_info\" as an empty object. 
     7. Budget Level: {budget or "Not specified"} 
-    8. Additional Details: - Factor in travel time to/from the airport. 
+    8. {num_adults} Adults, {num_children} Children
+    9. Hotel: {hotel}
+    10. Keywords: {keywords}
+    11. Additional Details: - Factor in travel time to/from the airport. 
     - Include descriptions of activities or places to visit in destination.
     - Provide a timestamp and detailed cost for each activity.
+    - Plan activities based on keywords for preferences
+    - Include transportation if necessary
+    - Include all meals every day
     - All numbers for prices"""
 
     # simple user prompt to test with
-    # user_prompt = f'''return json object where json headers: \"header\": \"departure city\", \"arrival city\", \"travel dates\", \"car rental info\", \"content\": \"place\", \"location\", \"time stamp\", \"description\", \"price\"\n, one for header and car rental, two content items 
+    # user_prompt = f'''return json object where json headers: \"header\": \"departure city\", \"arrival city\", \"start_date\", \"end_date\", \"car rental info\",: \"content\": \"place\", \"location\", \"time stamp\", \"description\", \"price\"\n, one for header and car rental, two content items 
     # always number as a string for price'''
 
-    # test link: http://127.0.0.1:5000/generate-itinerary?start_date=2024-12-01&end_date=2024-12-05&departure_city=New+York&arrival_city=Los+Angeles&flight_needed=yes&car_needed=yes&hotel_stars=4&budget=mid?action=view
+    # test link: http://127.0.0.1:5000/generate-itinerary?start_date=2024-12-13&end_date=2024-12-15&departure_city=Boston&arrival_city=New+York&flight_needed=yes&car_needed=yes&hotel_stars=4&budget=mid&keywords=child-friendly,food,tourist+attractions&adults=2&children=2&departing_flight=B6+217,$574,Boston+Logan+International+Airport,2024-12-14,05:39,John+F.+Kennedy+International+Airport,2024-12-14,07:00&returning_flight=B6+1318,2024-12-15,13:15,John+F.+Kennedy+International+Airport,2024-12-15,14:35,Boston+Logan+International+Airport&hotel=Hyatt+Grand+Central+New+York+-+Price:$361&action=view
+
 
     # Generate response from OpenAI
     completion = client.chat.completions.create(
@@ -473,13 +556,12 @@ def generate_itinerary():
     header = pdf_content['header']
     pdf.set_font("Arial", style='B', size=14)
     pdf.cell(0, 10, "Travel Itinerary", ln=True, align='C')
-    # pdf.multi_cell(0, 10, pdf_content_string)
     pdf.ln(10)
 
     pdf.set_font("Arial", size=12)
     pdf.cell(0, 10, f"Departure City: {header['departure_city']}", ln=True)
     pdf.cell(0, 10, f"Arrival City: {header['arrival_city']}", ln=True)
-    pdf.cell(0, 10, f"Travel Dates: From {header['travel_dates']['start_date']} to {header['travel_dates']['end_date']}", ln=True)
+    pdf.cell(0, 10, f"Travel Dates: From {header['start_date']} to {header['end_date']}", ln=True)
     pdf.ln(5)
 
     # Add Car Rental Info
@@ -501,19 +583,43 @@ def generate_itinerary():
     if content_list:
         pdf.set_font("Arial", style='B', size=12)
         pdf.cell(0, 10, "Schedule:", ln=True)
-        pdf.ln(5)
-    
+        curr_date = ""
         for content in content_list:
             if isinstance(content, dict):  # Check if content is a dictionary
                 price = content.get('price', '0')
                 total_price += price
-                pdf.set_font("Arial", size=12)
-                pdf.cell(0, 10, f"  Place: {content.get('place', 'N/A')}", ln=True)
-                pdf.cell(0, 10, f"  Location: {content.get('location', 'N/A')}", ln=True)
-                pdf.cell(0, 10, f"  Time Stamp: {content.get('time_stamp', 'N/A')}", ln=True)
-                pdf.multi_cell(0, 10, f"  Description: {content.get('description', 'N/A')}")
-                pdf.cell(0, 10, f"  Price: ${content.get('price', 'N/A')}", ln=True)
-                pdf.ln(10)
+                # Parse the time
+                date_obj = datetime.fromisoformat(content["time_stamp"])
+                time_formatted = date_obj.strftime("%I:%M %p")  # e.g., 10:00 AM
+                date_formatted = date_obj.strftime("%A %Y-%m-%d")  # e.g., Saturday 2024-12-14
+
+                # Add the date header if the date changes
+                if date_formatted != curr_date:
+                    if curr_date is not None:
+                        pdf.ln(5)  # Add spacing before a new date header
+                    pdf.set_font("Arial", "B", 12)  # Bold font for the date header
+                    pdf.cell(0, 10, date_formatted, border=1, ln=1, align="C")  # Full-width date header
+                    curr_date = date_formatted
+
+                # Add a row for the time and details
+                pdf.set_font("Arial", size=12)  # Regular font for time and details
+
+                # Define column widths
+                time_column_width = 40  # Fixed width for the time column
+                details_column_width = pdf.w - time_column_width - 20  # Remaining width for the details column (accounting for margins)
+
+                # Time column
+                pdf.cell(time_column_width, 10, time_formatted, border=0, ln=0, align='C')
+
+                # Details column
+                details = (
+                    f"{content.get('place', 'N/A')}\n"
+                    f"{content.get('location', 'N/A')}\n"
+                    f"{content.get('description', 'N/A')}\n"
+                    f"Price: ${content.get('price', 'N/A')}"
+                )
+                pdf.multi_cell(details_column_width, 10, details, border=1, align='L')
+
             elif isinstance(content, str):  # Handle string content
                 pdf.set_font("Arial", size=12)
                 pdf.multi_cell(0, 10, f"  Note: {content}")
@@ -522,10 +628,8 @@ def generate_itinerary():
         pdf.set_font("Arial", style='B', size=12)
         pdf.cell(0, 10, "No destination information available.", ln=True)
 
-    pdf.set_font("Arial", style='B', size=12)
-    pdf.cell(0, 10, "Total Price Summary:", ln=True)
     pdf.set_font("Arial", size=12)
-    pdf.cell(0, 10, f"  Total Price: ${total_price}", ln=True)
+    pdf.cell(0, 10, f"  Total Price: ${total_price}", ln=True, align='C')
     pdf.ln(10)
 
     # Determine if the PDF should be downloaded or displayed inline
@@ -533,6 +637,7 @@ def generate_itinerary():
 
     # Create a response with the PDF
     response = make_response(pdf.output(dest='S').encode('latin1'))
+    # response = make_response(pdf.output(dest='S').encode('utf-8'))
     response.headers['Content-Type'] = 'application/pdf'
     response.headers['Content-Disposition'] = f'{disposition}; filename=itinerary.pdf'
 

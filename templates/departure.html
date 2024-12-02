@@ -7,49 +7,87 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <!-- Navigation bar -->
     {% include 'navbar.html' %}
+
     <div class="container">
         <h1>Departure Flight Options</h1>
-    <!-- Sort Dropdown -->
-    <div class="sort-container">
-        <label for="sort-options">Sort by:</label>
-        <select id="sort-options" name="sort-options" onchange="sortFlights(this.value)">
-            <option value="price-asc">Price - Ascending</option>
-            <option value="price-desc">Price - Descending</option>
-            <option value="time-asc">Travel Time - Ascending</option>
-            <option value="time-desc">Travel Time - Descending</option>
-        </select>
-    </div>
 
-        <!-- Flight options -->
-        <form action="{{ url_for('departure') }}" method="POST">
-            {% for flight in flights %}
-            <div class="flight-option">
-                <input type="radio" id="{{ flight.flight_number }}" name="flight" value="{{ flight.flight_number }}" required>
-                <label for="{{ flight.flight_number }}">
-                    <strong>Flight {{ loop.index }} - ${{ flight.price }}</strong><br>
-                    {{ flight.departure_airport.name }} to {{ flight.arrival_airport.name }}<br>
-                    {{ flight.departure_airport.time }} to {{ flight.arrival_airport.time }}<br>
-                    {% if flight.stopovers %}
-                        <br>Stopovers: {{ flight.stopovers }}
-                    {% endif %}
-                </label>
+        <!-- Sort Dropdown -->
+        <div class="sort-container">
+            <label for="sort-options">Sort by:</label>
+            <select id="sort-options" name="sort-options" onchange="sortFlights(this.value)">
+                <option value="price-asc">Price - Ascending</option>
+                <option value="price-desc">Price - Descending</option>
+                <option value="time-asc"> Flight Time - Earliest</option>
+                <option value="time-desc"> Flight Time - Latest</option>
+            </select>
+        </div>
+
+        <!-- Display flights -->
+        <form action="{{ url_for('arrival') }}" method="GET">
+            <div class="flight-list" id="flight-list">
+                {% for flight in flights %}
+                <div class="flight-option" data-rating="{{ flight.price }}" data-time="{{ flight.departure_time }}">
+                    <input type="radio" id="flight-{{ loop.index }}" name="flight" value="{{ flight.departure_time }}-{{ flight.arrival_time }}" required>
+                    <label for="flight-{{ loop.index }}" class="flight-label">
+                        <div class="flight-content">
+                            <div class="flight-info">
+                                <strong>Flight {{ loop.index }} - ${{ flight.price }}</strong><br>
+                                From: {{ flight.departure_airport }} ({{ flight.departure_time }})<br>
+                                To: {{ flight.arrival_airport }} ({{ flight.arrival_time }})<br>
+                                {% if flight.stopovers %}
+                                Stopovers: {{ flight.stopovers }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                {% else %}
+                <p>No flights available for the selected criteria.</p>
+                {% endfor %}
             </div>
-        {% else %}
-            <p>No flights available</p>
-        {% endfor %}
 
-            <!-- Submit button -->
-            <button type="submit" id="confirm">Next</button>
+            <input type="hidden" name="start_date" value="{{ start_date }}">
+            <input type="hidden" name="end_date" value="{{ end_date }}">
+            <input type="hidden" name="departure_city" value="{{ departure_city }}">
+            <input type="hidden" name="arrival_city" value="{{ arrival_city }}">
+            <input type="hidden" name="num_adults" value="{{ num_adults }}">
+            <input type="hidden" name="num_children" value="{{ num_children }}">
+            <input type="hidden" name="hotel_stars" value="{{ hotel_stars }}">
+            <button type="submit" id="confirm2">Next</button>
         </form>
     </div>
 
     <script>
-        // Sort flights logic
-        function sortFlights(value) {
-            console.log("Sorting by:", value);
-            // Implement sort logic here
+        document.addEventListener('DOMContentLoaded', () => {
+            // Sort default on price ascending
+            sortFlights('price-asc');
+        });
+
+        function sortFlights(criteria) {
+            const flightList = document.getElementById('flight-list');
+            const flights = Array.from(flightList.getElementsByClassName('flight-option'));
+
+            // Sorting logic
+            flights.sort((a, b) => {
+                // Parse prices using regex to extract the number after "$"
+                const priceA = parseFloat(a.querySelector('strong').textContent.match(/\$(\d+)/)[1]) || Infinity;
+                const priceB = parseFloat(b.querySelector('strong').textContent.match(/\$(\d+)/)[1]) || Infinity;
+
+                // Parse departure times using regex to extract the datetime
+                const timeRegex = /\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\)/;
+                const timeA = Date.parse(a.querySelector('label').textContent.match(timeRegex)[1]) || 0;
+                const timeB = Date.parse(b.querySelector('label').textContent.match(timeRegex)[1]) || 0;
+
+                // Sorting based on criteria
+                if (criteria === 'price-asc') return priceA - priceB; // Ascending order by price
+                if (criteria === 'price-desc') return priceB - priceA; // Descending order by price
+                if (criteria === 'time-asc') return timeA - timeB; // Ascending order by time
+                if (criteria === 'time-desc') return timeB - timeA; // Descending order by time
+            });
+
+            // Reorder flights in the DOM
+            flights.forEach(flight => flightList.appendChild(flight));
         }
     </script>
 </body>

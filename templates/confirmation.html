@@ -24,7 +24,19 @@
 
         <button type="submit" id="edit-button">Edit Details</button>
 
-        <form action="{{ url_for('departure') }}" method="get" style="display:inline;">
+        <form action="{{ url_for('departure' if flight_needed == 'Yes' else 'hotel') }}" method="get" style="display:inline;">
+            <input type="hidden" name="start_date" value="{{ start_date }}">
+            <input type="hidden" name="end_date" value="{{ end_date }}">
+            <input type="hidden" name="departure_city" value="{{ departure_city }}">
+            <input type="hidden" name="arrival_city" value="{{ arrival_city }}">
+            <input type="hidden" name="num_adults" value="{{ num_adults }}">
+            <input type="hidden" name="num_children" value="{{ num_children }}">
+            <input type="hidden" name="flight_needed" value="{{ flight_needed }}">
+            <input type="hidden" name="car_needed" value="{{ car_needed }}">
+            <input type="hidden" name="hotel_stars" value="{{ hotel_stars }}">
+            <input type="hidden" name="budget" value="{{ budget }}">
+            <input type="hidden" name="keywords" value="{{ keywords }}">
+
             <button type="submit" id="confirm">Next</button>
         </form>
 

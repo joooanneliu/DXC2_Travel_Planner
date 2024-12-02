@@ -24,33 +24,59 @@
         </div>
 
         <!-- Display hotels -->
-        <div class="hotel-list">
-            {% for hotel in hotels %}
-            <div class="hotel-option">
-                <img src="{{ hotel.images[0].thumbnail }}" alt="{{ hotel.name }}" class="hotel-image">
-                <div class="hotel-info">
-                    <strong>{{ hotel.name }}</strong><br>
-                    Rating: {{ hotel.overall_rating }} / 5<br>
-                    Price per night: {{ hotel.rate_per_night.lowest }}<br>
-                </div>
-            </div>
-            {% else %}
-            <p>No hotels available</p>
-            {% endfor %}
-        </div>
-
-        <!-- Submit button -->
         <form action="{{ url_for('itinerary') }}" method="POST">
-            <button type="submit" id="confirm">Next</button>
+            <div class="hotel-list" id="hotel-list">
+                {% for hotel in hotels %}
+                <div class="hotel-option" data-rating="{{ hotel.overall_rating }}" data-price="{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Infinity' }}">
+                    <input type="radio" id="hotel-{{ loop.index }}" name="hotel" value="{{ hotel.name }}" required>
+                    <label for="hotel-{{ loop.index }}" class="hotel-label">
+                        <div class="hotel-content">
+                            <img src="{{ hotel.images[0].thumbnail }}" alt="{{ hotel.name }}" class="hotel-image">
+                            <div class="hotel-info">
+                                <strong>{{ hotel.name }}</strong>
+                                <span>Price per night: {{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'N/A' }}</span>
+                                <span>Rating: {{ hotel.overall_rating }} / 5</span>
+                                <span>Class: {{ hotel.hotel_class }}</span>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                {% else %}
+                <p>No hotels available</p>
+                {% endfor %}
+            </div>
+            <button type="submit" id="confirm2">Next</button>
         </form>
     </div>
 
     <script>
-        // Sorting logic (optional)
-        function sortHotels(value) {
-            console.log("Sorting by:", value);
-            // Implement sorting logic here if needed
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get the default value from the sort dropdown
+            const defaultSort = document.getElementById('sort-options').value;
+            sortFlights(defaultSort);
+        });
+
+    function sortFlights(criteria) {
+        const flightList = document.getElementById('flight-list');
+        const flights = Array.from(flightList.getElementsByClassName('flight-option'));
+
+        // Sorting logic
+        flights.sort((a, b) => {
+            const priceA = parseFloat(a.getAttribute('data-price')) || Infinity; // Default to Infinity if price missing
+            const priceB = parseFloat(b.getAttribute('data-price')) || Infinity;
+            const timeA = Date.parse(a.getAttribute('data-time')) || 0; // Default to 0 if time missing
+            const timeB = Date.parse(b.getAttribute('data-time')) || 0;
+
+            if (criteria === 'price-asc') return priceA - priceB;
+            if (criteria === 'price-desc') return priceB - priceA;
+            if (criteria === 'time-asc') return timeA - timeB;
+            if (criteria === 'time-desc') return timeB - timeA;
+        });
+
+        // Reorder flights in the DOM
+        flights.forEach(flight => flightList.appendChild(flight));
+    }
+
     </script>
 </body>
 </html>

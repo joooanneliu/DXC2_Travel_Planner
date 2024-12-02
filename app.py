@@ -1,5 +1,6 @@
 import os
 import serpapi
+import json
 from flask import Flask, render_template, url_for, redirect, request, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -104,6 +105,7 @@ def trip_input():
 @app.route('/confirmation')
 @login_required
 def confirmation():
+    # Retrieve query parameters
     start_date = request.args.get('start_date')
     end_date = request.args.get('end_date')
     departure_city = request.args.get('departure_city')
@@ -116,100 +118,174 @@ def confirmation():
     budget = request.args.get('budget')
     keywords = request.args.get('keywords')
 
+    print("Flight Needed:", request.args.get('flight_needed'))
+
     return render_template('confirmation.html', start_date=start_date, end_date=end_date,
                            departure_city=departure_city, arrival_city=arrival_city,
-                           num_adults=num_adults,num_children=num_children,
+                           num_adults=num_adults, num_children=num_children,
                            flight_needed=flight_needed, car_needed=car_needed,
                            hotel_stars=hotel_stars, budget=budget, keywords=keywords)
+
 
 @app.route('/departure', methods=['GET', 'POST'])
 @login_required
 def departure():
-    # Check if flight is needed
-    flight_needed = request.args.get('flight_needed')
-    if flight_needed == "No":
-        return redirect(url_for('hotel'))
-
-    # Retrieve data from query parameters
     start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date') or "2025-05-10"  # Default if not provided
     departure_city = request.args.get('departure_city')
     arrival_city = request.args.get('arrival_city')
+    num_adults = request.args.get('num_adults') or 1  # Default to 1 adult if missing
+    num_children = request.args.get('num_children') or 0  # Default to 0 children if missing
+    hotel_stars = request.args.get('hotel_stars') or 2 
 
-    
+    # Map to airport codes
     departure_code = airport_codes.get(departure_city)
     arrival_code = airport_codes.get(arrival_city)
 
+    if not departure_code or not arrival_code:
+        flash("Invalid city selection. Please try again.", "warning")
+        # return redirect(url_for('trip_input'))
+
+    # SerpAPI query parameters
     params = {
-        "engine": "google_flights",
         "departure_id": departure_code,
         "arrival_id": arrival_code,
-        "outbound_date": start_date,
-        "currency": "USD",
+        "engine": "google_flights",
+        "gl": "us",
         "hl": "en",
+        "currency": "USD",
+        "type": "2",  # One-way flight
+        "outbound_date": start_date,
+        "adults": num_adults,
+        "children": num_children,
+        "stops": 1,
         "api_key": "a780666c9c29631a90981f92043aabbd4ad07b787e71674ec474a4a07b7cdc15"
     }
-    search = GoogleSearch(params)
-    results = search.get_dict()
-   
 
-    # Extract the first 4 best flights
-    best_flights = results.get("best_flights", [])[:4]
-    print(best_flights)
-    # Render departure.html with the flight data
-    return render_template('departure.html', flights=best_flights)
+    try:
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        flights = results.get("best_flights", [])
+    except Exception as e:
+        print(f"Error during SerpAPI call: {e}")
+        flash("Failed to fetch departure flights. Please try again later.", "warning")
+        flights = []
+
+    outbound_flights = [
+        {
+            "price": flight['price'],
+            "departure_airport": flight['flights'][0]['departure_airport']['name'],
+            "departure_time": flight['flights'][0]['departure_airport']['time'],
+            "arrival_airport": flight['flights'][0]['arrival_airport']['name'],
+            "arrival_time": flight['flights'][0]['arrival_airport']['time']
+        }
+        for flight in flights
+    ]
+
+    return render_template(
+        'departure.html',
+        flights=outbound_flights,
+        start_date=start_date,
+        end_date=end_date,
+        departure_city=departure_city,
+        arrival_city=arrival_city,
+        num_adults=num_adults,
+        num_children=num_children,
+        hotel_stars=request.args.get('hotel_stars')
+    )
+
 
 @app.route('/arrival', methods=['GET', 'POST'])
 @login_required
 def arrival():
-    flight_needed = request.args.get('flight_needed')
-    if flight_needed == "No":
-        return redirect(url_for('hotel'))
-
-    # Retrieve data from query parameters
     end_date = request.args.get('end_date')
-    departure_city = request.args.get('arrival_city') 
-    arrival_city = request.args.get('departure_city')
+    departure_city = request.args.get('arrival_city')  # Reverse mapping
+    arrival_city = request.args.get('departure_city')  # Reverse mapping
+    num_adults = request.args.get('num_adults') or 1  # Default to 1 adult if not provided
+    num_children = request.args.get('num_children') or 0  # Default to 0 children if not provided
+    start_date = request.args.get('start_date')
+    hotel_stars = request.args.get('hotel_stars') or 2 
 
-    # Map cities to their airport codes
+    # Map to airport codes
     departure_code = airport_codes.get(departure_city)
     arrival_code = airport_codes.get(arrival_city)
 
-    # Call SerpAPI for flight data (reverse the cities here)
+    if not departure_code or not arrival_code:
+        flash("Invalid city selection for return flight.", "warning")
+        return redirect(url_for('departure'))  # Redirect to departure if cities are invalid
+
+    # SerpAPI query parameters
     params = {
-        "engine": "google_flights",
         "departure_id": departure_code,
         "arrival_id": arrival_code,
-        "outbound_date": end_date,  # Use end_date as the flight date
-        "currency": "USD",
+        "engine": "google_flights",
+        "gl": "us",
         "hl": "en",
-        "api_key": "your_api_key_here"
+        "currency": "USD",
+        "type": "2",  # One-way flight
+        "outbound_date": end_date,
+        "adults": num_adults,
+        "children": num_children,
+        "stops": 1,
+        "api_key": "a780666c9c29631a90981f92043aabbd4ad07b787e71674ec474a4a07b7cdc15"
     }
-    search = GoogleSearch(params)
-    results = search.get_dict()
 
-    best_flights = results.get("best_flights", [])[:4]
+    print(f"Arrival Params: {params}")  # Debugging
+    try:
+        search = GoogleSearch(params)
+        results = search.get_dict()
+        print(f"Arrival API Response: {results}")  # Debugging
+        flights = results.get("best_flights", [])
+    except Exception as e:
+        print(f"Error during SerpAPI call: {e}")
+        flash("Failed to fetch return flights.", "warning")
+        flights = []
 
-    # Ensure 'best_flights' is being passed correctly
-    return render_template('arrival.html', flights=best_flights)
+    inbound_flights = [
+        {
+            "price": flight['price'],
+            "departure_airport": flight['flights'][0]['departure_airport']['name'],
+            "departure_time": flight['flights'][0]['departure_airport']['time'],
+            "arrival_airport": flight['flights'][0]['arrival_airport']['name'],
+            "arrival_time": flight['flights'][0]['arrival_airport']['time']
+        }
+        for flight in flights
+    ]
 
-# @app.route('/flightandcar')
-# @login_required
-# def flight_car():
-#     return render_template('flight-car.html')
+    return render_template(
+        'arrival.html',
+        flights=inbound_flights,
+        end_date=end_date,
+        start_date=start_date,  # Pass start_date to hotel
+        departure_city=departure_city,
+        arrival_city=arrival_city,
+        num_adults=num_adults,
+        num_children=num_children,
+        hotel_stars=hotel_stars
+    )
+
+
+
 
 @app.route('/hotel', methods=['GET', 'POST'])
 @login_required
 def hotel():
-    hotel_stars = request.args.get('hotel_stars', type=int) 
+    # Retrieve parameters from query args
+    hotel_stars = request.args.get('hotel_stars', type=int) or 2  # Default to 3 stars
     departure_city = request.args.get('departure_city')
-    arrival_city = request.args.get('arrival_city')
-    start_date = request.args.get('start_date')
-    end_date = request.args.get('end_date')
-    num_adults = request.args.get('num_adults')
-    
-    # Construct the hotel query based on the departure city
-    hotel_query = f"{arrival_city} Resorts"
-    
+    arrival_city = request.args.get('arrival_city') 
+
+    # Validate and fix arrival_city if necessary
+    if not arrival_city or arrival_city == departure_city:
+        arrival_city = request.args.get('final_arrival_city') 
+
+    start_date = request.args.get('start_date') 
+    end_date = request.args.get('end_date') 
+    num_adults = request.args.get('num_adults') or 1  # Default to 1 adult
+
+    # Construct the hotel query based on the corrected arrival city
+    hotel_query = f"{departure_city} Resorts"
+
     # Call SerpAPI for hotel data
     params = {
         "engine": "google_hotels",
@@ -218,26 +294,37 @@ def hotel():
         "check_out_date": end_date,
         "adults": num_adults,
         "currency": "USD",
+        "hotel_class": hotel_stars,
         "gl": "us",
         "hl": "en",
-        "api_key": "your_api_key_here"
+        "api_key": "a780666c9c29631a90981f92043aabbd4ad07b787e71674ec474a4a07b7cdc15"
     }
-    search = GoogleSearch(params)
-    results = search.get_dict()
 
-    # Filter hotels based on the star rating
+    try:
+        search = GoogleSearch(params)
+        results = search.get_dict()
+    except Exception as e:
+        print(f"Error fetching hotels: {e}")
+        flash("Failed to fetch hotel data. Please try again later.", "warning")
+        results = {}
+
+    # Extract hotels and filter based on overall rating
     hotels = results.get('properties', [])
-    filtered_hotels = [hotel for hotel in hotels if hotel.get('overall_rating', 0) >= hotel_stars]
+    filtered_hotels = [
+        hotel for hotel in hotels
+        if hotel.get('overall_rating') is not None
+    ]
 
     # Get top 4 hotels
     top_hotels = filtered_hotels[:4]
 
     return render_template('hotel.html', hotels=top_hotels)
 
-@app.route('/itinerary')
+
+@app.route('/itinerary', methods=['GET', 'POST'])
 @login_required
 def itinerary():
-    return "Welcome to the itinerary"
+    return render_template('itinerary.html')
 
 @app.route('/logout')
 @login_required

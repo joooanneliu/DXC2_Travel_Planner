@@ -26,14 +26,24 @@ body {
     background-color: rgba(255, 255, 255, 0.75); 
     width: 75%;
     padding: 20px;
-    height: 100vh;
     right: 0;
     top: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 button {
     background-color: #929cde;
     color: black; 
+    border: none;
+    border-radius: 15px; 
+    padding: 5px 15px;
+    font-size: 13px;
+}
+
+#edit-button {
+    background-color: #aade92;
     border: none;
     border-radius: 15px; 
     padding: 5px 15px;
@@ -132,3 +142,104 @@ select {
 .sort-container{
     margin-bottom: 20px;
 }
+
+/*Hotel styling */
+.hotel-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.hotel-option {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.hotel-option:hover,
+.hotel-option input:checked {
+    border-color: #483d8b;
+    box-shadow: 0 4px 8px rgba(72, 61, 139, 0.3);
+}
+
+.hotel-label {
+    width: 100%;
+}
+
+.hotel-content {
+    display: flex;
+    align-items: center;
+}
+
+.hotel-image {
+    width: 250px;
+    height: 150px;
+    border-radius: 10px;
+    object-fit: cover;
+    margin-right: 20px;
+}
+
+.hotel-info {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 16px;
+}
+
+.hotel-info strong {
+    font-size: 18px;
+}
+
+.hotel-info span {
+    font-weight: bold;
+}
+
+#confirm2 {
+    margin-top: 20px;
+    margin-left: 850px;
+}
+
+/* Flight Styling */
+.flight-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.flight-option {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    background: #f9f9f9;
+}
+
+.flight-option:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.flight-label {
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.flight-content {
+    flex-grow: 1;
+    margin-left: 10px;
+}
+
+.flight-info {
+    font-size: 14px;
+    line-height: 1.5;
+}
+

@@ -18,15 +18,50 @@
 
         <!-- Iframe to display itinerary content -->
         <div class="iframe-container">
-            <iframe id="itineraryFrame" style="display: none;" title="Travel Itinerary"></iframe>
+            <iframe id="itineraryFrame" style="display: none; width: 100%; height: 600px; border: none;" title="Travel Itinerary"></iframe>
+        </div>
+
+        <!-- Error message container -->
+        <div id="errorMessage" style="display: none; color: red; margin-top: 20px;">
+            Unable to load the itinerary. Please try again later.
         </div>
     </div>
 
     <script>
         function viewItinerary() {
             const iframe = document.getElementById('itineraryFrame');
-            iframe.src = '/generate-itinerary?action=view'; 
-            iframe.style.display = 'block'; // Make the iframe visible
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Hide error message initially
+            errorMessage.style.display = 'none';
+
+            // Construct the URL dynamically to include all necessary query parameters
+            const url = new URL('/generate-itinerary', window.location.origin);
+            const params = new URLSearchParams({
+                start_date: '{{ start_date }}',
+                end_date: '{{ end_date }}',
+                departure_city: '{{ departure_city }}',
+                arrival_city: '{{ arrival_city }}',
+                flight_needed: '{{ flight_needed }}',
+                car_needed: '{{ car_needed }}',
+                hotel_stars: '{{ hotel_stars }}',
+                budget: '{{ budget }}',
+                keywords: '{{ keywords }}',
+                action: 'view'
+            });
+            url.search = params.toString();
+
+            // Set iframe source and display it
+            iframe.src = url.toString();
+            iframe.style.display = 'block';
+
+            // Error handling: Detect iframe loading failure
+            iframe.onload = () => {
+                if (iframe.contentWindow.location.href === 'about:blank') {
+                    iframe.style.display = 'none';
+                    errorMessage.style.display = 'block';
+                }
+            };
         }
     </script>
 </body>

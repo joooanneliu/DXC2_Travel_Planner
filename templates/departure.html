@@ -35,9 +35,6 @@
                                 <strong>Flight {{ loop.index }} - ${{ flight.price }}</strong><br>
                                 From: {{ flight.departure_airport }} ({{ flight.departure_time }})<br>
                                 To: {{ flight.arrival_airport }} ({{ flight.arrival_time }})<br>
-                                {% if flight.stopovers %}
-                                Stopovers: {{ flight.stopovers }}
-                                {% endif %}
                             </div>
                         </div>
                     </label>
@@ -53,42 +50,80 @@
             <input type="hidden" name="arrival_city" value="{{ arrival_city }}">
             <input type="hidden" name="num_adults" value="{{ num_adults }}">
             <input type="hidden" name="num_children" value="{{ num_children }}">
+            <input type="hidden" name="flight_needed" value="{{ flight_needed }}">
+            <input type="hidden" name="car_needed" value="{{ car_needed }}">
             <input type="hidden" name="hotel_stars" value="{{ hotel_stars }}">
+            <input type="hidden" name="budget" value="{{ budget }}">
+            <input type="hidden" name="keywords" value="{{ keywords }}">
             <button type="submit" id="confirm2">Next</button>
         </form>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Sort default on price ascending
-            sortFlights('price-asc');
-        });
-
         function sortFlights(criteria) {
             const flightList = document.getElementById('flight-list');
             const flights = Array.from(flightList.getElementsByClassName('flight-option'));
 
-            // Sorting logic
+            // Sorting logic with robust parsing
             flights.sort((a, b) => {
-                // Parse prices using regex to extract the number after "$"
-                const priceA = parseFloat(a.querySelector('strong').textContent.match(/\$(\d+)/)[1]) || Infinity;
-                const priceB = parseFloat(b.querySelector('strong').textContent.match(/\$(\d+)/)[1]) || Infinity;
+                // Helper function to extract price
+                const extractPrice = (element) => {
+                    const priceAttr = element.getAttribute('data-price');
+                    const price = parseFloat(priceAttr);
+                    return isNaN(price) ? Infinity : price;
+                };
 
-                // Parse departure times using regex to extract the datetime
-                const timeRegex = /\((\d{4}-\d{2}-\d{2} \d{2}:\d{2})\)/;
-                const timeA = Date.parse(a.querySelector('label').textContent.match(timeRegex)[1]) || 0;
-                const timeB = Date.parse(b.querySelector('label').textContent.match(timeRegex)[1]) || 0;
+                // Helper function to extract departure time
+                const extractDepartureTime = (element) => {
+                    const departureAttr = element.getAttribute('data-departure');
+                    // Ensure the time is parsed correctly
+                    const timestamp = Date.parse(departureAttr);
+                    return isNaN(timestamp) ? 0 : timestamp;
+                };
 
-                // Sorting based on criteria
-                if (criteria === 'price-asc') return priceA - priceB; // Ascending order by price
-                if (criteria === 'price-desc') return priceB - priceA; // Descending order by price
-                if (criteria === 'time-asc') return timeA - timeB; // Ascending order by time
-                if (criteria === 'time-desc') return timeB - timeA; // Descending order by time
+                // Extract values
+                const priceA = extractPrice(a);
+                const priceB = extractPrice(b);
+                const timeA = extractDepartureTime(a);
+                const timeB = extractDepartureTime(b);
+
+                // Sorting logic based on criteria
+                switch (criteria) {
+                    case 'price-asc':
+                        // Primary sort by price, secondary by time
+                        return priceA !== priceB 
+                            ? priceA - priceB 
+                            : timeA - timeB;
+                    case 'price-desc':
+                        // Primary sort by price (descending), secondary by time
+                        return priceB !== priceA 
+                            ? priceB - priceA 
+                            : timeB - timeA;
+                    case 'time-asc':
+                        // Primary sort by time, secondary by price
+                        return timeA !== timeB 
+                            ? timeA - timeB 
+                            : priceA - priceB;
+                    case 'time-desc':
+                        // Primary sort by time (descending), secondary by price
+                        return timeB !== timeA 
+                            ? timeB - timeA 
+                            : priceB - priceA;
+                    default:
+                        return 0; // Default to no change
+                }
             });
 
             // Reorder flights in the DOM
             flights.forEach(flight => flightList.appendChild(flight));
         }
+
+        // Event listener for initial page load
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get the default value from the sort dropdown
+            const defaultSort = document.getElementById('sort-options').value;
+            sortFlights(defaultSort);
+        });
     </script>
 </body>
 </html>

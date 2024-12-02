@@ -12,7 +12,7 @@
     <div class="container">
         <h1>Hotel Options</h1>
 
-        <!-- Sort Dropdown (optional) -->
+        <!-- Sort Dropdown -->
         <div class="sort-container">
             <label for="sort-options">Sort by:</label>
             <select id="sort-options" name="sort-options" onchange="sortHotels(this.value)">
@@ -27,7 +27,7 @@
         <form action="{{ url_for('itinerary') }}" method="POST">
             <div class="hotel-list" id="hotel-list">
                 {% for hotel in hotels %}
-                <div class="hotel-option" data-rating="{{ hotel.overall_rating }}" data-price="{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Infinity' }}">
+                <div class="hotel-option" data-price="{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Infinity' }}" data-rating="{{ hotel.overall_rating or 0 }}">
                     <input type="radio" id="hotel-{{ loop.index }}" name="hotel" value="{{ hotel.name }}" required>
                     <label for="hotel-{{ loop.index }}" class="hotel-label">
                         <div class="hotel-content">
@@ -35,47 +35,86 @@
                             <div class="hotel-info">
                                 <strong>{{ hotel.name }}</strong>
                                 <span>Price per night: {{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'N/A' }}</span>
-                                <span>Rating: {{ hotel.overall_rating }} / 5</span>
-                                <span>Class: {{ hotel.hotel_class }}</span>
+                                <span>Rating: {{ hotel.overall_rating or 'N/A' }} / 5</span>
+                                <span>Class: {{ hotel.hotel_class or 'N/A' }}</span>
                             </div>
                         </div>
                     </label>
                 </div>
                 {% else %}
-                <p>No hotels available</p>
+                <p>No hotels available for the selected criteria.</p>
                 {% endfor %}
             </div>
+
+            <!-- Hidden inputs to pass necessary parameters -->
+            <input type="hidden" name="start_date" value="{{ start_date }}">
+            <input type="hidden" name="end_date" value="{{ end_date }}">
+            <input type="hidden" name="departure_city" value="{{ departure_city }}">
+            <input type="hidden" name="arrival_city" value="{{ arrival_city }}">
+            <input type="hidden" name="num_adults" value="{{ num_adults }}">
+            <input type="hidden" name="num_children" value="{{ num_children }}">
+            <input type="hidden" name="flight_needed" value="{{ flight_needed }}">
+            <input type="hidden" name="car_needed" value="{{ car_needed }}">
+            <input type="hidden" name="hotel_stars" value="{{ hotel_stars }}">
+            <input type="hidden" name="budget" value="{{ budget }}">
+            <input type="hidden" name="keywords" value="{{ keywords }}">
             <button type="submit" id="confirm2">Next</button>
         </form>
     </div>
 
     <script>
+        function sortHotels(criteria) {
+            const hotelList = document.getElementById('hotel-list');
+            const hotels = Array.from(hotelList.getElementsByClassName('hotel-option'));
+
+            // Sorting logic with improved handling of edge cases
+            hotels.sort((a, b) => {
+                // Extract price and rating, handling various edge cases
+                const extractNumericValue = (element, attribute) => {
+                    const value = element.getAttribute(attribute);
+
+                    // Handle 'N/A' or empty strings
+                    if (!value || value === 'N/A') {
+                        return attribute === 'data-price' ? Infinity : -Infinity;
+                    }
+
+                    // Strip non-numeric characters (e.g., '$') and parse to float
+                    const numValue = parseFloat(value.replace(/[^0-9.]/g, ''));
+                    return isNaN(numValue) 
+                        ? (attribute === 'data-price' ? Infinity : -Infinity) 
+                        : numValue;
+                };
+
+                const priceA = extractNumericValue(a, 'data-price');
+                const priceB = extractNumericValue(b, 'data-price');
+                const ratingA = extractNumericValue(a, 'data-rating');
+                const ratingB = extractNumericValue(b, 'data-rating');
+
+                // Sorting logic with multiple criteria
+                switch (criteria) {
+                    case 'price-asc':
+                        return priceA !== priceB ? priceA - priceB : ratingB - ratingA;
+                    case 'price-desc':
+                        return priceB !== priceA ? priceB - priceA : ratingA - ratingB;
+                    case 'rating-asc':
+                        return ratingA !== ratingB ? ratingA - ratingB : priceA - priceB;
+                    case 'rating-desc':
+                        return ratingB !== ratingA ? ratingB - ratingA : priceB - priceA;
+                    default:
+                        return 0; // Default to original order
+                }
+            });
+
+            // Reorder hotels in the DOM
+            hotels.forEach(hotel => hotelList.appendChild(hotel));
+        }
+
+        // Event listener for initial page load
         document.addEventListener('DOMContentLoaded', () => {
             // Get the default value from the sort dropdown
             const defaultSort = document.getElementById('sort-options').value;
-            sortFlights(defaultSort);
+            sortHotels(defaultSort);
         });
-
-    function sortFlights(criteria) {
-        const flightList = document.getElementById('flight-list');
-        const flights = Array.from(flightList.getElementsByClassName('flight-option'));
-
-        // Sorting logic
-        flights.sort((a, b) => {
-            const priceA = parseFloat(a.getAttribute('data-price')) || Infinity; // Default to Infinity if price missing
-            const priceB = parseFloat(b.getAttribute('data-price')) || Infinity;
-            const timeA = Date.parse(a.getAttribute('data-time')) || 0; // Default to 0 if time missing
-            const timeB = Date.parse(b.getAttribute('data-time')) || 0;
-
-            if (criteria === 'price-asc') return priceA - priceB;
-            if (criteria === 'price-desc') return priceB - priceA;
-            if (criteria === 'time-asc') return timeA - timeB;
-            if (criteria === 'time-desc') return timeB - timeA;
-        });
-
-        // Reorder flights in the DOM
-        flights.forEach(flight => flightList.appendChild(flight));
-    }
 
     </script>
 </body>

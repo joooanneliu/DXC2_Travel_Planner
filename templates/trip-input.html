@@ -10,14 +10,14 @@
 <body>
     {% include 'navbar.html' %}
     <div class="container">
-        <form action="{{ url_for('trip_input') }}" method="POST" class="input-box" id="travelForm">
+        <form action="{{ url_for('confirmation') }}" method="GET" class="input-box" id="travelForm">
 
             <!-- Date selection -->
             <div class="input-text">
-                <a>Dates*: </a>
-                <input type="date" id="start-date" name="start-date" required>
-                <a>to</a>
-                <input type="date" id="end-date" name="end-date" required>
+                <label>Dates*: </label>
+                <input type="date" id="start-date" name="start-date" value="{{ request.args.get('start_date', '') }}" min="{{ today_date }}" required>
+                <label>to</label>
+                <input type="date" id="end-date" name="end-date" value="{{ request.args.get('end_date', '') }}" min="{{ today_date }}" required>
             </div>
 
             <!-- Departure City (Dropdown) -->
@@ -25,12 +25,12 @@
                 <label for="departure-city">Departure City:</label>
                 <select name="departure-city" id="departure-city" required>
                     <option value="default">Select</option>
-                    <option value="New York">New York</option>
-                    <option value="Austin">Austin</option>
-                    <option value="San Francisco">San Francisco</option>
-                    <option value="Dallas">Dallas</option>
-                    <option value="Chicago">Chicago</option>
-                    <option value="Houston">Houston</option>
+                    <option value="New York" {% if request.args.get('departure_city') == 'New York' %}selected{% endif %}>New York</option>
+                    <option value="Austin" {% if request.args.get('departure_city') == 'Austin' %}selected{% endif %}>Austin</option>
+                    <option value="San Francisco" {% if request.args.get('departure_city') == 'San Francisco' %}selected{% endif %}>San Francisco</option>
+                    <option value="Dallas" {% if request.args.get('departure_city') == 'Dallas' %}selected{% endif %}>Dallas</option>
+                    <option value="Chicago" {% if request.args.get('departure_city') == 'Chicago' %}selected{% endif %}>Chicago</option>
+                    <option value="Houston" {% if request.args.get('departure_city') == 'Houston' %}selected{% endif %}>Houston</option>
                 </select>
             </div>
 
@@ -39,12 +39,12 @@
                 <label for="arrival-city">Arrival City:</label>
                 <select name="arrival-city" id="arrival-city" required>
                     <option value="default">Select</option>
-                    <option value="New York">New York</option>
-                    <option value="Austin">Austin</option>
-                    <option value="San Francisco">San Francisco</option>
-                    <option value="Dallas">Dallas</option>
-                    <option value="Chicago">Chicago</option>
-                    <option value="Houston">Houston</option>
+                    <option value="New York" {% if request.args.get('arrival_city') == 'New York' %}selected{% endif %}>New York</option>
+                    <option value="Austin" {% if request.args.get('arrival_city') == 'Austin' %}selected{% endif %}>Austin</option>
+                    <option value="San Francisco" {% if request.args.get('arrival_city') == 'San Francisco' %}selected{% endif %}>San Francisco</option>
+                    <option value="Dallas" {% if request.args.get('arrival_city') == 'Dallas' %}selected{% endif %}>Dallas</option>
+                    <option value="Chicago" {% if request.args.get('arrival_city') == 'Chicago' %}selected{% endif %}>Chicago</option>
+                    <option value="Houston" {% if request.args.get('arrival_city') == 'Houston' %}selected{% endif %}>Houston</option>
                 </select>
             </div>
 
@@ -52,58 +52,58 @@
             <div class="input-text">
                 <label for="hotel">Hotel: </label>
                 <select name="hotel-stars" id="hotel" required>
-                    <option value="1">Any</option>
-                    <option value="2">2 stars or above</option>
-                    <option value="3">3 stars or above</option>
-                    <option value="4">4 stars or above</option>
-                    <option value="5">5 stars</option>
+                    <option value="1" {% if request.args.get('hotel_stars') == '1' %}selected{% endif %}>Any</option>
+                    <option value="2" {% if request.args.get('hotel_stars') == '2' %}selected{% endif %}>2 stars or above</option>
+                    <option value="3" {% if request.args.get('hotel_stars') == '3' %}selected{% endif %}>3 stars or above</option>
+                    <option value="4" {% if request.args.get('hotel_stars') == '4' %}selected{% endif %}>4 stars or above</option>
+                    <option value="5" {% if request.args.get('hotel_stars') == '5' %}selected{% endif %}>5 stars</option>
                 </select>
             </div>
 
             <!-- People Traveling -->
             <div class="input-text">
                 <label for="adults">Adults (18+):</label>
-                <input type="number" id="adults" name="adults" min="0" max="10" value="0" required>
+                <input type="number" id="adults" name="adults" min="1" max="10" value="{{ request.args.get('adults', 1) }}" required>
             </div>
             <div class="input-text">
                 <label for="children">Children (4-17):</label>
-                <input type="number" id="children" name="children" min="0" max="10" value="0">
+                <input type="number" id="children" name="children" min="0" max="10" value="{{ request.args.get('children', 0) }}">
             </div>
 
             <!-- Budget selection -->
             <div class="input-text">
                 <label for="budget">Budget:</label>
-                <select id="budget" name="budget">
-                    <option value="default">Select</option>
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
+                <select id="budget" name="budget" required>
+                    <option value="default" {% if request.args.get('budget') == 'default' %}selected{% endif %}>Select</option>
+                    <option value="high" {% if request.args.get('budget') == 'high' %}selected{% endif %}>High</option>
+                    <option value="medium" {% if request.args.get('budget') == 'medium' %}selected{% endif %}>Medium</option>
+                    <option value="low" {% if request.args.get('budget') == 'low' %}selected{% endif %}>Low</option>
                 </select>
             </div>
 
+            <!-- Mode of Transport -->
             <div class="input-text">
                 <label>Mode of Transport:</label>
                 <div>
-                    <input type="radio" id="flight" name="transport-mode" value="Flight" required>
+                    <input type="radio" id="flight" name="transport-mode" value="Flight" {% if request.args.get('flight_needed') == 'Yes' %}checked{% endif %}>
                     <label for="flight">Flight</label>
 
-                    <input type="radio" id="car" name="transport-mode" value="Car">
+                    <input type="radio" id="car" name="transport-mode" value="Car" {% if request.args.get('car_needed') == 'Yes' %}checked{% endif %}>
                     <label for="car">Car</label>
                 </div>
             </div>
 
-            <input type="hidden" name="flight_needed" value="Yes">
-
+            <!-- Keywords -->
             <div class="input-text">
                 <label for="keywords">Keywords:</label>
-                <textarea id="keywords" name="keywords" rows="2" placeholder="Type keywords and separate by commas"></textarea>
+                <textarea id="keywords" name="keywords" rows="2" placeholder="e.g., family-friendly, museums, parks">{{ request.args.get('keywords', '') }}</textarea>
             </div>
 
+            <!-- Submit Button -->
             <div class="input-text">
                 <button type="submit">Next</button>
             </div>
         </form>
     </div>
-
 </body>
 </html>

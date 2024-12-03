@@ -1,15 +1,14 @@
 import os
-
 import json
-from flask import Flask, render_template, url_for, redirect, request, flash
+import openai
+from flask import Flask, render_template, url_for, redirect, request, flash, make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from forms import LoginForm, SignupForm
 from models import db, User
 from flask_migrate import Migrate
-from datetime import timedelta
-from openai import OpenAI
+from datetime import timedelta, datetime
 from fpdf import FPDF
 from serpapi import GoogleSearch
 
@@ -25,7 +24,7 @@ login_manager.login_view = 'sign_in'  # Redirect users who are not logged in
 
 migrate = Migrate(app, db)
 
-
+openai.api_key = "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"
 # Airport Codes Dictionary
 airport_codes = {
     "New York": "LGA",
@@ -118,9 +117,9 @@ def confirmation():
     arrival_city = request.args.get('arrival-city')
     num_adults = request.args.get('adults', 1)  # Default to 1 adult
     num_children = request.args.get('children', 0)  # Default to 0 children
-    flight_needed = request.args.get('transport-mode', "No")  # Based on transport mode
-    flight_needed = "Yes" if flight_needed == "Flight" else "No"
-    car_needed = "Yes" if flight_needed == "Car" else "No"
+    transportMode = request.args.get('transport-mode', "No")  # Based on transport mode
+    flight_needed = "Yes" if transportMode == "Flight" else "No"
+    car_needed = "Yes" if transportMode == "Car" else "No"
     hotel_stars = request.args.get('hotel-stars', 2)
     budget = request.args.get('budget', "default")
     keywords = request.args.get('keywords', "")
@@ -300,8 +299,8 @@ def arrival():
         flights=inbound_flights,
         end_date=end_date,
         start_date=start_date,
-        departure_city=departure_city,
-        arrival_city=arrival_city,
+        departure_city=arrival_city,
+        arrival_city=departure_city,
         num_adults=num_adults,
         num_children=num_children,
         hotel_stars=hotel_stars,
@@ -347,7 +346,7 @@ def hotel():
         "check_in_date": start_date,
         "check_out_date": end_date,
         "adults": num_adults,
-        "children": num_children,
+        "children": 0,
         "currency": "USD",
         "hotel_class": hotel_stars,
         "gl": "us",
@@ -399,11 +398,280 @@ def hotel():
     )
 
 
-
+#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
 @app.route('/itinerary', methods=['GET', 'POST'])
 @login_required
 def itinerary():
-    return render_template('itinerary.html')
+    # Collect parameters passed through GET or POST
+    params = {
+        "start_date": request.args.get("start_date"),
+        "end_date": request.args.get("end_date"),
+        "departure_city": request.args.get("departure_city"),
+        "arrival_city": request.args.get("arrival_city"),
+        "flight_needed": request.args.get("flight_needed"),
+        "car_needed": request.args.get("car_needed"),
+        "hotel_stars": request.args.get("hotel_stars"),
+        "budget": request.args.get("budget"),
+        "keywords": request.args.get("keywords"),
+        "num_adults": request.args.get("num_adults"),
+        "num_children": request.args.get("num_children"),
+        "departing_flight": request.args.get("departing_flight"),
+        "returning_flight": request.args.get("returning_flight"),
+        "hotel": request.args.get("hotel"),
+    }
+
+    print("Itinerary parameters:", json.dumps(params, indent=4))
+    return render_template('itinerary.html', **params)
+
+@app.route('/generate-itinerary', methods=['GET'])
+def generate_itinerary():
+    # Standard details
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    departure_city = request.args.get('departure_city')
+    arrival_city = request.args.get('arrival_city')
+    flight_needed = request.args.get('flight_needed')
+    car_needed = request.args.get('car_needed')
+    hotel_stars = request.args.get('hotel_stars')
+    budget = request.args.get('budget')
+    keywords = request.args.get('keywords', '')
+    num_adults = request.args.get('num_adults') or 1  # Default to 1 adult if not provided
+    num_children = request.args.get('num_children') or 0  # Default to 0 children 
+
+
+    # Parse departing flight
+    departing_flight_data = request.args.get('departing_flight')
+    departing_flight = {}
+    if departing_flight_data:
+        departing_flight_details = departing_flight_data.split('|')
+        if len(departing_flight_details) >= 5:
+            departing_flight = {
+                "price": departing_flight_details[0],
+                "departure_airport": departing_flight_details[1],
+                "departure_time": departing_flight_details[2],
+                "arrival_airport": departing_flight_details[3],
+                "arrival_time": departing_flight_details[4]
+            }
+        else:
+            flash("Invalid departing flight details.", "warning")
+
+    # Parse returning flight
+    returning_flight_data = request.args.get('returning_flight')
+    returning_flight = {}
+    if returning_flight_data:
+        returning_flight_details = returning_flight_data.split('|')
+        if len(returning_flight_details) >= 5:
+            returning_flight = {
+                "price": returning_flight_details[0],
+                "departure_airport": returning_flight_details[1],
+                "departure_time": returning_flight_details[2],
+                "arrival_airport": returning_flight_details[3],
+                "arrival_time": returning_flight_details[4]
+            }
+        else:
+            flash("Invalid returning flight details.", "warning")
+
+    # Parse selected hotel
+    selected_hotel = request.args.get('hotel')
+    hotel = {}
+    if selected_hotel:
+        hotel_details = selected_hotel.split('|')
+        if len(hotel_details) >= 3:
+            hotel = {
+                "name": hotel_details[0],
+                "price_per_night": hotel_details[1],
+                "rating": hotel_details[2]
+            }
+        else:
+            flash("Invalid hotel details.", "warning")
+
+
+    # Check if all necessary fields are present
+    if not all([start_date, end_date, departure_city, arrival_city, flight_needed, car_needed, hotel_stars, budget]):
+        flash("Missing fields for generating itinerary.", "warning")
+        return redirect(url_for('itinerary'))
+    
+    user_prompt = f"""
+        Generate a detailed travel itinerary in JSON format. Ensure the itinerary includes all necessary details, including timestamps, addresses, travel durations, and costs. Use the following JSON structure:
+
+        {{
+            "header": {{
+                "departure_city": "",
+                "arrival_city": "",
+                "start_date": "",
+                "end_date": "",
+                "car_rental_info": {{
+                    "company": "",
+                    "car_type": "",
+                    "pick_up_location": "",
+                    "pick_up_time": "",
+                    "return_location": "",
+                    "return_time": "",
+                    "total_price": ""
+                }}
+            }},
+            "content": [
+                {{
+                    "place": "",
+                    "location": "",
+                    "time_stamp": "",
+                    "description": "",
+                    "price": ""
+                }}
+            ]
+        }}
+
+        Requirements:
+        1. Travel Dates: From {start_date} to {end_date}. Ensure activities & all meals are generated for each day.
+        2. Departure City: {departure_city}.
+        3. Arrival City: {arrival_city}.
+        4. Flight Details:
+        - Required: {flight_needed}.
+        - Departure Flight Price: {departing_flight}.
+        - Return Flight Price: {returning_flight}.
+        5. Car Rental:
+        - Required: {car_needed}.
+        - If a car rental is required, include details under "car_rental_info". If not, set "car_rental_info" as an empty object.
+        6. Budget Level: {budget or "Not specified"}.
+        7. Travelers: {num_adults} adults, {num_children} children.
+        8. Accommodation:
+        - Hotel: {hotel} (The given price is the rate per night. Include this rate at the end of each night).
+        - Add the hotel stay to the end of each day in the itinerary.
+        9. Preferences:
+        - Keywords: {keywords} (Use these to prioritize activities or destinations).
+        - Include detailed descriptions for each activity or place to visit.
+        - Provide timestamps and detailed costs for all activities and meals.
+        10. Additional Considerations:
+            - Account for travel time to/from the airport.
+            - Ensure the itinerary starts and ends with flights only if "flight_needed" is true.
+            - Include all meals every day.
+            - Add necessary transportation for each activity.
+
+        Formatting Rules:
+        - Use clear timestamps (e.g., "2024-12-03T09:00").
+        - Include all numbers for prices.
+        - Avoid using the character \u2019 for apostrophes.
+        - Use a dictionary for the "content" array.
+        """
+
+    # Generate response from OpenAI
+    completion = openai.ChatCompletion.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {
+                "role": "user",
+                "content": user_prompt
+            }
+        ],
+        response_format={
+            "type": "json_object"
+        }
+    )
+
+    # Response
+    pdf_content_string = completion.choices[0].message.content
+    pdf_content = json.loads(pdf_content_string)
+    
+    # Generate PDF
+    pdf = FPDF()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+
+    # # Add Header Section
+    header = pdf_content['header']
+    pdf.set_font("Arial", style='B', size=14)
+    pdf.cell(0, 10, "Travel Itinerary", ln=True, align='C')
+    pdf.ln(10)
+
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, f"Departure City: {header['departure_city']}", ln=True)
+    pdf.cell(0, 10, f"Arrival City: {header['arrival_city']}", ln=True)
+    pdf.cell(0, 10, f"Number of Adults: {num_adults}", ln=True)
+    pdf.cell(0, 10, f"Number of Children: {num_children}", ln=True)
+    pdf.cell(0, 10, f"Travel Dates: From {header['start_date']} to {header['end_date']}", ln=True)
+    pdf.ln(5)
+
+    # Add Car Rental Info
+    car_rental = header.get('car rental info', {})
+    if car_rental:
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, "Car Rental Information:", ln=True)
+        pdf.set_font("Arial", size=12)
+        pdf.cell(0, 10, f"  Company: {car_rental.get('company', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Car Type: {car_rental.get('car_type', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Pickup Location: {car_rental.get('pickup_location', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Pickup Time: {car_rental.get('pickup_time', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Return Location: {car_rental.get('return_location', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Return Time: {car_rental.get('return_time', 'N/A')}", ln=True)
+        pdf.ln(10)
+
+    content_list = pdf_content.get('content', [])
+    total_price = 0
+    if content_list:
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, "Schedule:", ln=True)
+        curr_date = ""
+        for content in content_list:
+            if isinstance(content, dict):  # Check if content is a dictionary
+                price = content.get('price', '0')
+                total_price += price
+                # Parse the time
+                date_obj = datetime.fromisoformat(content["time_stamp"])
+                time_formatted = date_obj.strftime("%I:%M %p")  # e.g., 10:00 AM
+                date_formatted = date_obj.strftime("%A %Y-%m-%d")  # e.g., Saturday 2024-12-14
+
+                # Add the date header if the date changes
+                if date_formatted != curr_date:
+                    if curr_date is not None:
+                        pdf.ln(5)  # Add spacing before a new date header
+                    pdf.set_font("Arial", "B", 12)  # Bold font for the date header
+                    pdf.cell(0, 10, date_formatted, border=1, ln=1, align="C")  # Full-width date header
+                    curr_date = date_formatted
+
+                # Add a row for the time and details
+                pdf.set_font("Arial", size=12)  # Regular font for time and details
+
+                # Define column widths
+                time_column_width = 40  # Fixed width for the time column
+                details_column_width = pdf.w - time_column_width - 20  # Remaining width for the details column (accounting for margins)
+
+                # Time column
+                pdf.cell(time_column_width, 10, time_formatted, border=0, ln=0, align='C')
+
+                # Details column
+                details = (
+                    f"{content.get('place', 'N/A')}\n"
+                    f"{content.get('location', 'N/A')}\n"
+                    f"{content.get('description', 'N/A')}\n"
+                    f"Price: ${content.get('price', 'N/A')}"
+                )
+                pdf.multi_cell(details_column_width, 10, details, border=1, align='L')
+
+            elif isinstance(content, str):  # Handle string content
+                pdf.set_font("Arial", size=12)
+                pdf.multi_cell(0, 10, f"  Note: {content}")
+                pdf.ln(5)
+    else:
+        pdf.set_font("Arial", style='B', size=12)
+        pdf.cell(0, 10, "No destination information available.", ln=True)
+
+    pdf.set_font("Arial", size=12)
+    pdf.cell(0, 10, f"  Total Price: ${total_price}", ln=True, align='C')
+    pdf.ln(10)
+
+    # Determine if the PDF should be downloaded or displayed inline
+    disposition = "inline" if request.args.get("action") == "view" else "attachment"
+
+    # Create a response with the PDF
+    response = make_response(pdf.output(dest='S').encode('latin1'))
+    # response = make_response(pdf.output(dest='S').encode('utf-8'))
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'{disposition}; filename=itinerary.pdf'
+
+    return response
+
 
 @app.route('/logout')
 @login_required

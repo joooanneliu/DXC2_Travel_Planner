@@ -31,7 +31,7 @@
         function viewItinerary() {
             const iframe = document.getElementById('itineraryFrame');
             const errorMessage = document.getElementById('errorMessage');
-            
+
             // Hide error message initially
             errorMessage.style.display = 'none';
 
@@ -47,6 +47,11 @@
                 hotel_stars: '{{ hotel_stars }}',
                 budget: '{{ budget }}',
                 keywords: '{{ keywords }}',
+                num_adults: '{{ num_adults }}',
+                num_children: '{{ num_children }}',
+                departing_flight: '{{ departing_flight }}',
+                returning_flight: '{{ returning_flight }}',
+                hotel: '{{ hotel }}',
                 action: 'view'
             });
             url.search = params.toString();

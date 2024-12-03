@@ -1,5 +1,6 @@
 body {
-    background-image: url('../static/new york.webp');
+    /* background-image: url('../static/new york.webp'); */
+    background-color: #929cde;
     background-repeat: repeat-y;
     background-position: center;
     background-size: cover;
@@ -40,6 +41,10 @@ button {
     border-radius: 15px; 
     padding: 5px 15px;
     font-size: 13px;
+}
+
+.button-container {
+    margin-bottom: 15px;
 }
 
 #edit-button {

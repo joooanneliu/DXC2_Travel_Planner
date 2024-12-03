@@ -33,9 +33,8 @@
                         <div class="flight-content">
                             <div class="flight-info">
                                 <strong>Flight {{ loop.index }} - ${{ flight.price }}</strong><br>
-                                From: {{ flight.departure_airport }}<br>
-                                To: {{ flight.arrival_airport }}<br>
-                                Time: {{ flight.departure_time }} - {{ flight.arrival_time }}<br>
+                                From: {{ flight.departure_airport }} ({{ flight.departure_time }})<br>
+                                To: {{ flight.arrival_airport }} ({{ flight.arrival_time }})<br>
                             </div>
                         </div>
                     </label>
@@ -57,6 +56,7 @@
             <input type="hidden" name="hotel_stars" value="{{ hotel_stars }}">
             <input type="hidden" name="budget" value="{{ budget }}">
             <input type="hidden" name="keywords" value="{{ keywords }}">
+            <input type="hidden" name="departing_flight" value="{{ request.args.get('departing_flight') }}">
             <button type="submit" id="confirm2">Next</button>
         </form>
     </div>

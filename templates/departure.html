@@ -27,8 +27,8 @@
         <form action="{{ url_for('arrival') }}" method="GET">
             <div class="flight-list" id="flight-list">
                 {% for flight in flights %}
-                <div class="flight-option" data-rating="{{ flight.price }}" data-time="{{ flight.departure_time }}">
-                    <input type="radio" id="flight-{{ loop.index }}" name="flight" value="{{ flight.departure_time }}-{{ flight.arrival_time }}" required>
+                <div class="flight-option" data-price="{{ flight.price }}" data-departure="{{ flight.departure_time }}" data-arrival="{{ flight.arrival_time }}">
+                    <input type="radio" id="flight-{{ loop.index }}" name="departing_flight" value="{{ flight.price }}|{{ flight.departure_airport }}|{{ flight.departure_time }}|{{ flight.arrival_airport }}|{{ flight.arrival_time }}" required>
                     <label for="flight-{{ loop.index }}" class="flight-label">
                         <div class="flight-content">
                             <div class="flight-info">

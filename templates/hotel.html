@@ -24,11 +24,11 @@
         </div>
 
         <!-- Display hotels -->
-        <form action="{{ url_for('itinerary') }}" method="POST">
+        <form action="{{ url_for('itinerary') }}" method="GET">
             <div class="hotel-list" id="hotel-list">
                 {% for hotel in hotels %}
                 <div class="hotel-option" data-price="{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'Infinity' }}" data-rating="{{ hotel.overall_rating or 0 }}">
-                    <input type="radio" id="hotel-{{ loop.index }}" name="hotel" value="{{ hotel.name }}" required>
+                    <input type="radio" id="hotel-{{ loop.index }}" name="hotel" value="{{ hotel.name }}|{{ hotel.rate_per_night.lowest if hotel.rate_per_night else 'N/A' }}|{{ hotel.overall_rating or 'N/A' }}" required>
                     <label for="hotel-{{ loop.index }}" class="hotel-label">
                         <div class="hotel-content">
                             <img src="{{ hotel.images[0].thumbnail }}" alt="{{ hotel.name }}" class="hotel-image">
@@ -58,6 +58,8 @@
             <input type="hidden" name="hotel_stars" value="{{ hotel_stars }}">
             <input type="hidden" name="budget" value="{{ budget }}">
             <input type="hidden" name="keywords" value="{{ keywords }}">
+            <input type="hidden" name="departing_flight" value="{{ request.args.get('departing_flight') }}">
+            <input type="hidden" name="returning_flight" value="{{ request.args.get('returning_flight') }}">
             <button type="submit" id="confirm2">Next</button>
         </form>
     </div>

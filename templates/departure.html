@@ -28,11 +28,11 @@
             <div class="flight-list" id="flight-list">
                 {% for flight in flights %}
                 <div class="flight-option" data-price="{{ flight.price }}" data-departure="{{ flight.departure_time }}" data-arrival="{{ flight.arrival_time }}">
-                    <input type="radio" id="flight-{{ loop.index }}" name="departing_flight" value="{{ flight.price }}|{{ flight.departure_airport }}|{{ flight.departure_time }}|{{ flight.arrival_airport }}|{{ flight.arrival_time }}" required>
+                    <input type="radio" id="flight-{{ loop.index }}" name="departing_flight" value="{{ flight.price }}|{{ flight.flight_number }}|{{ flight.departure_airport }}|{{ flight.departure_time }}|{{ flight.arrival_airport }}|{{ flight.arrival_time }}" required>
                     <label for="flight-{{ loop.index }}" class="flight-label">
                         <div class="flight-content">
                             <div class="flight-info">
-                                <strong>Flight {{ loop.index }} - ${{ flight.price }}</strong><br>
+                                <strong>Flight {{ flight.flight_number }} - ${{ flight.price }}</strong><br>
                                 From: {{ flight.departure_airport }} ({{ flight.departure_time }})<br>
                                 To: {{ flight.arrival_airport }} ({{ flight.arrival_time }})<br>
                             </div>

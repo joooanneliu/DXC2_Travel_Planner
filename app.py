@@ -11,6 +11,11 @@ from flask_migrate import Migrate
 from datetime import timedelta, datetime
 from fpdf import FPDF
 from serpapi import GoogleSearch
+from dotenv import load_dotenv
+
+load_dotenv()
+serpAPI_key = os.getenv("SERP_API_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///instance/users.db'  # Adjust to use the instance folder's db
@@ -24,7 +29,7 @@ login_manager.login_view = 'sign_in'  # Redirect users who are not logged in
 
 migrate = Migrate(app, db)
 
-openai.api_key = "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"
+
 # Airport Codes Dictionary
 airport_codes = {
     "New York": "LGA",
@@ -128,10 +133,10 @@ def confirmation():
     next_route = 'departure' if flight_needed == "Yes" else 'hotel'
 
     # Debugging
-    print(f"Start Date: {start_date}, End Date: {end_date}")
-    print(f"Departure City: {departure_city}, Arrival City: {arrival_city}")
-    print(f"Flight Needed: {flight_needed}, Car Needed: {car_needed}")
-    print(f"Next Route: {next_route}")
+    # print(f"Start Date: {start_date}, End Date: {end_date}")
+    # print(f"Departure City: {departure_city}, Arrival City: {arrival_city}")
+    # print(f"Flight Needed: {flight_needed}, Car Needed: {car_needed}")
+    # print(f"Next Route: {next_route}")
 
     # Validation
     if not start_date or not end_date or not departure_city or not arrival_city:
@@ -185,7 +190,7 @@ def departure():
         "adults": num_adults,
         "children": num_children,
         "stops": 1,  # Limit to direct flights
-        "api_key": "a780666c9c29631a90981f92043aabbd4ad07b787e71674ec474a4a07b7cdc15"
+        "api_key": serpAPI_key
     }
 
     # Call SerpAPI
@@ -193,7 +198,7 @@ def departure():
         search = GoogleSearch(params)
         results = search.get_dict()
         flights = results.get("best_flights", [])
-        print(f"API Response for Departure Flights: {results}")  # Debugging
+       # print(f"API Response for Departure Flights: {results}")  # Debugging
     except Exception as e:
         print(f"Error during SerpAPI call: {e}")
         flash("Failed to fetch departure flights. Please try again later.", "warning")
@@ -203,6 +208,7 @@ def departure():
     outbound_flights = [
         {
             "price": flight['price'],
+            "flight_number": flight['flights'][0]['flight_number'],
             "departure_airport": flight['flights'][0]['departure_airport']['name'],
             "departure_time": flight['flights'][0]['departure_airport']['time'],
             "arrival_airport": flight['flights'][0]['arrival_airport']['name'],
@@ -267,14 +273,14 @@ def arrival():
         "adults": num_adults,
         "children": num_children,
         "stops": 1,  # Only direct flights
-        "api_key": "a780666c9c29631a90981f92043aabbd4ad07b787e71674ec474a4a07b7cdc15"
+        "api_key": serpAPI_key
     }
 
-    print(f"Arrival Params: {params}")  # Debugging
+    #print(f"Arrival Params: {params}")  # Debugging
     try:
         search = GoogleSearch(params)
         results = search.get_dict()
-        print(f"Arrival API Response: {results}")  # Debugging
+        #print(f"Arrival API Response: {results}")  # Debugging
         flights = results.get("best_flights", [])
     except Exception as e:
         print(f"Error during SerpAPI call: {e}")
@@ -285,6 +291,7 @@ def arrival():
     inbound_flights = [
         {
             "price": flight['price'],
+            "flight_number": flight['flights'][0]['flight_number'],
             "departure_airport": flight['flights'][0]['departure_airport']['name'],
             "departure_time": flight['flights'][0]['departure_airport']['time'],
             "arrival_airport": flight['flights'][0]['arrival_airport']['name'],
@@ -336,8 +343,8 @@ def hotel():
     hotel_query = f"{arrival_city} Resorts"
 
     # Debugging
-    print(f"Hotel Query: {hotel_query}")
-    print(f"Search Parameters: Hotel Stars: {hotel_stars}, Start Date: {start_date}, End Date: {end_date}")
+    # print(f"Hotel Query: {hotel_query}")
+    # print(f"Search Parameters: Hotel Stars: {hotel_stars}, Start Date: {start_date}, End Date: {end_date}")
 
     # Call SerpAPI for hotel data
     params = {
@@ -351,14 +358,14 @@ def hotel():
         "hotel_class": hotel_stars,
         "gl": "us",
         "hl": "en",
-        "api_key": "a780666c9c29631a90981f92043aabbd4ad07b787e71674ec474a4a07b7cdc15"
+        "api_key": serpAPI_key
     }
 
     try:
         search = GoogleSearch(params)
         results = search.get_dict()
         hotels = results.get('properties', [])
-        print(json.dumps(hotels, indent=4))  # Debugging the full API response
+        # print(json.dumps(hotels, indent=4))  # Debugging the full API response
     except Exception as e:
         print(f"Error fetching hotels: {e}")
         flash("Failed to fetch hotel data. Please try again later.", "warning")
@@ -398,7 +405,7 @@ def hotel():
     )
 
 
-#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
+
 @app.route('/itinerary', methods=['GET', 'POST'])
 @login_required
 def itinerary():
@@ -420,7 +427,7 @@ def itinerary():
         "hotel": request.args.get("hotel"),
     }
 
-    print("Itinerary parameters:", json.dumps(params, indent=4))
+    #print("Itinerary parameters:", json.dumps(params, indent=4))
     return render_template('itinerary.html', **params)
 
 @app.route('/generate-itinerary', methods=['GET'])
@@ -444,13 +451,14 @@ def generate_itinerary():
     departing_flight = {}
     if departing_flight_data:
         departing_flight_details = departing_flight_data.split('|')
-        if len(departing_flight_details) >= 5:
+        if len(departing_flight_details) >= 6:
             departing_flight = {
                 "price": departing_flight_details[0],
-                "departure_airport": departing_flight_details[1],
-                "departure_time": departing_flight_details[2],
-                "arrival_airport": departing_flight_details[3],
-                "arrival_time": departing_flight_details[4]
+                "flight_number": departing_flight_details[1],
+                "departure_airport": departing_flight_details[2],
+                "departure_time": departing_flight_details[3],
+                "arrival_airport": departing_flight_details[4],
+                "arrival_time": departing_flight_details[5]
             }
         else:
             flash("Invalid departing flight details.", "warning")
@@ -463,10 +471,11 @@ def generate_itinerary():
         if len(returning_flight_details) >= 5:
             returning_flight = {
                 "price": returning_flight_details[0],
-                "departure_airport": returning_flight_details[1],
-                "departure_time": returning_flight_details[2],
-                "arrival_airport": returning_flight_details[3],
-                "arrival_time": returning_flight_details[4]
+                "flight_number": returning_flight_details[1],
+                "departure_airport": returning_flight_details[2],
+                "departure_time": returning_flight_details[3],
+                "arrival_airport": returning_flight_details[4],
+                "arrival_time": returning_flight_details[5]
             }
         else:
             flash("Invalid returning flight details.", "warning")
@@ -529,14 +538,18 @@ def generate_itinerary():
         - Required: {flight_needed}.
         - Departure Flight Price: {departing_flight}.
         - Return Flight Price: {returning_flight}.
+        - Multiply the flight prices by total number of people.
+        - If flight is not needed, assume they're driving to with a car rental starting from the departure city.
         5. Car Rental:
         - Required: {car_needed}.
         - If a car rental is required, include details under "car_rental_info". If not, set "car_rental_info" as an empty object.
+        - Pickup & return should be from the departure city. Factor in driving time to reach the arrival city.
         6. Budget Level: {budget or "Not specified"}.
         7. Travelers: {num_adults} adults, {num_children} children.
         8. Accommodation:
         - Hotel: {hotel} (The given price is the rate per night. Include this rate at the end of each night).
-        - Add the hotel stay to the end of each day in the itinerary.
+        - Add the hotel stay to the end of each day but label it as overnight stay in the itinerary.
+        - Do not add costs for check-in and check-out.
         9. Preferences:
         - Keywords: {keywords} (Use these to prioritize activities or destinations).
         - Include detailed descriptions for each activity or place to visit.
@@ -549,7 +562,7 @@ def generate_itinerary():
 
         Formatting Rules:
         - Use clear timestamps (e.g., "2024-12-03T09:00").
-        - Include all numbers for prices.
+        - For price, ONLY return numbers.
         - Avoid using the character \u2019 for apostrophes.
         - Use a dictionary for the "content" array.
         """
@@ -593,29 +606,36 @@ def generate_itinerary():
     pdf.cell(0, 10, f"Travel Dates: From {header['start_date']} to {header['end_date']}", ln=True)
     pdf.ln(5)
 
+    total_price = 0
     # Add Car Rental Info
-    car_rental = header.get('car rental info', {})
+    car_rental = header.get('car_rental_info', {})
     if car_rental:
         pdf.set_font("Arial", style='B', size=12)
         pdf.cell(0, 10, "Car Rental Information:", ln=True)
         pdf.set_font("Arial", size=12)
         pdf.cell(0, 10, f"  Company: {car_rental.get('company', 'N/A')}", ln=True)
         pdf.cell(0, 10, f"  Car Type: {car_rental.get('car_type', 'N/A')}", ln=True)
-        pdf.cell(0, 10, f"  Pickup Location: {car_rental.get('pickup_location', 'N/A')}", ln=True)
-        pdf.cell(0, 10, f"  Pickup Time: {car_rental.get('pickup_time', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Pickup Location: {car_rental.get('pick_up_location', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Pickup Time: {car_rental.get('pick_up_time', 'N/A')}", ln=True)
         pdf.cell(0, 10, f"  Return Location: {car_rental.get('return_location', 'N/A')}", ln=True)
         pdf.cell(0, 10, f"  Return Time: {car_rental.get('return_time', 'N/A')}", ln=True)
+        pdf.cell(0, 10, f"  Total Price: ${car_rental.get('total_price', 'N/A')}", ln=True)
         pdf.ln(10)
+        price = int(car_rental.get('total_price', '0'))
+        total_price += price
 
     content_list = pdf_content.get('content', [])
-    total_price = 0
+
     if content_list:
         pdf.set_font("Arial", style='B', size=12)
         pdf.cell(0, 10, "Schedule:", ln=True)
         curr_date = ""
         for content in content_list:
             if isinstance(content, dict):  # Check if content is a dictionary
-                price = content.get('price', '0')
+                if content.get('price', '0') == "":
+                    price = 0
+                else: 
+                    price = int(content.get('price', '0'))
                 total_price += price
                 # Parse the time
                 date_obj = datetime.fromisoformat(content["time_stamp"])

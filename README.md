@@ -1,8 +1,8 @@
 # DXC2_Travel_Planner
 
-![Registration Page](screenshot/registration-ss.png)
-![Login Page](screenshot/login-ss.png)
-![Trip Input Page](screenshot/trip-input-ss.png)
-![Flight Options Page](screenshot/flights-ss.png)
-![Hotel Options Page](screenshot/hotels-ss.png)
-![Generated Itinerary](screenshot/itinerary-ss.png)
+<img src="screenshots/registration-ss.png" width="600" height="300">
+<img src="screenshots/login-ss.png" width="600" height="300">
+<img src="screenshots/trip-input-ss.png" width="600" height="300">
+<img src="screenshots/flights-ss.png" width="600" height="300">
+<img src="screenshots/hotels-ss.png" width="600" height="300">
+<img src="screenshots/itinerary-ss.png" width="600" height="300">

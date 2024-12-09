@@ -25,7 +25,7 @@ Some potential next steps that we were thinking about were adding additional fea
 To run this application, you will need to make a .env file and add your own SerpAPI and OpenAI API keys. Make sure Python is installed on your device. Run 
 ```pip install -r requirements.txt```to download all necessary dependencies
 
-### 3. Usage
+## 3. Usage
 To run the app, run ```python app.py```, and open the webpage locally. Create your account and log in after. 
 <img src="screenshots/registration-ss.png" width="600" height="300">
 <img src="screenshots/login-ss.png" width="600" height="300">

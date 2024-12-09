@@ -1,4 +1,4 @@
-# AI-powered Travel Planner
+# AI Travel Planner
 
 ## 1. Project Overview, Objectives, and Goals
 Our AI Studio Challenge Project was creating an Interactive AI Travel Planner with DXC Technology. The goal of this project was to provide personalized travel plans and booking recommendations tailored to user preferences. We wanted to redefine the travel planning experience by using Generative AI and near real-time data to help offer customized itineraries and booking options in a seamless manner. 

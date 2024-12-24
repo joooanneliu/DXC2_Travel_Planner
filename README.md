@@ -19,7 +19,7 @@ Phase 4: Integration, Review & Deployment (November)
 We gathered and integrated API results with the OpenAI API, implemented a PDF generator using the FPDF library to create itineraries, and finalized the project with presentations, a detailed GitHub ReadMe, and additional documentation.
 
 #### c. Potential Next Steps
-Some potential next steps that we were thinking about were adding additional features, such as: introducing a portal page for users, referencing past itineraries, and including public transportation using real-time transit data; enhance the user interface by allowing more outbound and return flight options and providing alternative destination options for users based on previous searches; and implementing security features like two-factor authentication. Also, we want to find better LLMs with faster response rate and also allow for more human input when generating the itineraries.  
+Some potential next steps that we were thinking about were adding additional features, such as: introducing a portal page for users, referencing past itineraries, and including public transportation using real-time transit data; enhance the user interface by allowing more outbound and return flight options and providing alternative destination options for users based on previous searches; and implementing security features like two-factor authentication. Also, we want to find better LLMs with faster response rate and, also allow for more human input when generating the itineraries.  
 
 ## 2. Installation 
 To run this application, you will need to make a .env file and add your own SerpAPI and OpenAI API keys. Make sure Python is installed on your device. Run 
